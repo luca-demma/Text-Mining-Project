@@ -1,33 +1,52 @@
 import json
-import os
+import contractions
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.stem.wordnet import WordNetLemmatizer
+lemmatizer = WordNetLemmatizer()
+nltk.download("punkt")
 
-RESOURCE_PATH = '/home/luca/UNI/Text Mining/processed/release/'
-NEWSPAPERS = sorted(os.listdir(RESOURCE_PATH))
+print('READING DATA FROM FILE ...')
+STRUCTURED_DATA_PATH = './data/structured_resource.json'
+file = open(STRUCTURED_DATA_PATH)
+data = json.load(file)
+print('READING DATA FROM FILE COMPLETED !')
 
-resourceStructured = []
 
-for newspaper in NEWSPAPERS:
-	currentNewspaperPath = RESOURCE_PATH + newspaper + '/per_day/'
-	print("Extracting: " + newspaper)
-	for day in sorted(os.listdir(currentNewspaperPath)):
-		dayFile = open(currentNewspaperPath + day)
-		dayData = json.load(dayFile)
-		for singleNewsId in dayData:
-			resourceStructured.append({
-				'newspaper': newspaper,
-				'date': day,
-				'year': day[:4],
-				'title': dayData[singleNewsId]['title'],
-				'description': dayData[singleNewsId]['description']
-			})
+def to_lower_case(news):
+	news['title_processed'] = news['title'].lower()
+	news['description_processed'] = news['description'].lower()
 
-outFile = open('./data/structured_resource.json', 'w')
-json.dump(resourceStructured, outFile, indent=4)
-outFile.close()
 
-"""
-structuredDataJsonString = json.dumps(resourceStructured, indent=4)
+def fix_contractions(news):
+	news['title_processed'] = contractions.fix(news['title_processed'], slang=False)
+	news['description_processed'] = contractions.fix(news['description_processed'], slang=False)
 
-with open('./data/structured_resource.json', 'w') as outfile:
-	outfile.write(structuredDataJsonString)
-"""
+
+def tokenize(news):
+	news['title_tokens'] = word_tokenize(news['title_processed'])
+	news['description_tokens'] = word_tokenize(news['description_processed'])
+
+
+def remove_punctuations(news):
+	news['title_tokens'] = [token for token in news['title_tokens'] if token.isalnum()]
+	news['description_tokens'] = [token for token in news['description_tokens'] if token.isalnum()]
+
+
+def lemmatize(news):
+	news['title_tokens'] = [lemmatizer.lemmatize(tokens) for tokens in news['title_tokens']]
+	print(news['title'])
+	print(news['title_tokens'])
+	print('/////////////////////////////////////')
+
+
+
+print('STARTING PROCESSING ...')
+
+
+for news in data:
+	to_lower_case(news)
+	fix_contractions(news)
+	tokenize(news)
+	remove_punctuations(news)
+	lemmatize(news)
