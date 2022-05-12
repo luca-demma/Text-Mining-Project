@@ -3,11 +3,15 @@ import contractions
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem.wordnet import WordNetLemmatizer
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 nltk.download("punkt")
 
-print('READING DATA FROM FILE ...')
 STRUCTURED_DATA_PATH = './data/structured_resource.json'
+
+print('READING DATA FROM FILE ...')
 file = open(STRUCTURED_DATA_PATH)
 data = json.load(file)
 print('READING DATA FROM FILE COMPLETED !')
@@ -29,16 +33,18 @@ def tokenize(news):
 
 
 def remove_punctuations(news):
-	news['title_tokens'] = [token for token in news['title_tokens'] if token.isalnum()]
-	news['description_tokens'] = [token for token in news['description_tokens'] if token.isalnum()]
+	news['title_tokens'] = [token for token in news['title_tokens'] if (token.isalnum() or token == "covid-19")]
+	news['description_tokens'] = [token for token in news['description_tokens'] if (token.isalnum() or token == "covid-19")]
 
 
 def lemmatize(news):
 	news['title_tokens'] = [lemmatizer.lemmatize(tokens) for tokens in news['title_tokens']]
-	print(news['title'])
-	print(news['title_tokens'])
-	print('/////////////////////////////////////')
+	news['description_tokens'] = [lemmatizer.lemmatize(tokens) for tokens in news['description_tokens']]
 
+
+def remove_stopwords(news):
+	news['title_tokens'] = [token for token in news['title_tokens'] if not token in stop_words]
+	news['description_tokens'] = [token for token in news['description_tokens'] if not token in stop_words]
 
 
 print('STARTING PROCESSING ...')
@@ -50,3 +56,9 @@ for news in data:
 	tokenize(news)
 	remove_punctuations(news)
 	lemmatize(news)
+	remove_stopwords(news)
+
+
+outFile = open('./data/normalized_data.json', 'w')
+json.dump(data, outFile, indent=4)
+outFile.close()
