@@ -28,10 +28,18 @@ for news in data:
 
 		isCovidScore *= probCovidTmp
 		notCovidScore *= probNotCovidTmp
+	for word in news['description_tokens']:
+		probCovidTmp = lowestCovidProb if not word in probCovid else probCovid[word]
+		probNotCovidTmp = lowestNotCovidProb if not word in probNotCovid else probNotCovid[word]
+
+		isCovidScore *= probCovidTmp
+		notCovidScore *= probNotCovidTmp
 	if isCovidScore > notCovidScore:
 		news['class'] = 'IS COVID'
 	else:
 		news['class'] = 'NOT COVID'
+	news['is_covid_score'] = isCovidScore
+	news['not_covid_score'] = notCovidScore
 
 
 # writing on file
