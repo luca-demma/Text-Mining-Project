@@ -32,9 +32,11 @@ for news in data:
 	news['description_pos_tagged'] = pos_tag(news['description_tokens_raw'])
 	ner_tree_description = nltk.ne_chunk(news['description_pos_tagged'])
 	news['description_ner'] = ner_tree_to_list(ner_tree_description)
-	print(news['description'])
-	print(news['description_ner'])
-	print('///////////////////')
+
+
+outFile = open('./data/ner.json', 'w')
+json.dump(data, outFile, indent=4)
+outFile.close()
 
 
 
