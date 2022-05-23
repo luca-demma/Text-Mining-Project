@@ -1,25 +1,22 @@
 import json
 from collections import defaultdict
+from fileActions import read_file_to_json, write_json_to_file
+from tqdm import tqdm
 
 PROB_COVID_PATH = './data/prob_covid.json'
 PROB_NOT_COVID_PATH = './data/prob_NOT_covid.json'
 NORMALIZED_DATA_PATH = './data/normalized_data.json'
 
-print('READING DATA FROM FILE ...')
-file = open(PROB_COVID_PATH)
-probCovid = json.load(file)
-file = open(PROB_NOT_COVID_PATH)
-probNotCovid = json.load(file)
-file = open(NORMALIZED_DATA_PATH)
-data = json.load(file)
-print('READING DATA FROM FILE COMPLETED !')
+probCovid = read_file_to_json(PROB_COVID_PATH)
+probNotCovid = read_file_to_json(PROB_NOT_COVID_PATH)
+data = read_file_to_json(NORMALIZED_DATA_PATH)
 
 classificationResults = {}
 
 lowestCovidProb = probCovid[list(probCovid)[-1]]
 lowestNotCovidProb = probNotCovid[list(probNotCovid)[-1]]
 
-for news in data:
+for news in tqdm(data):
 	isCovidScore = 1
 	notCovidScore = 1
 	for word in news['title_tokens']:
@@ -42,7 +39,5 @@ for news in data:
 	news['not_covid_score'] = notCovidScore
 
 
-# writing on file
-outFile = open('./data/classification_results.json', 'w')
-json.dump(data, outFile, indent=4)
-outFile.close()
+write_json_to_file(data, "classification_results.json")
+

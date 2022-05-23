@@ -1,64 +1,79 @@
 import json
 import contractions
 import nltk
+from fileActions import read_file_to_json, write_json_to_file
 from nltk.tokenize import word_tokenize
 from nltk.stem.wordnet import WordNetLemmatizer
+from fileActions import write_json_to_file
+from tqdm import tqdm
+
 nltk.download('stopwords')
 from nltk.corpus import stopwords
+
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 nltk.download("punkt")
 
 STRUCTURED_DATA_PATH = './data/structured_resource.json'
 
-print('READING DATA FROM FILE ...')
-file = open(STRUCTURED_DATA_PATH)
-data = json.load(file)
-print('READING DATA FROM FILE COMPLETED !')
+data = read_file_to_json(STRUCTURED_DATA_PATH)
 
 
-def to_lower_case(news):
-	news['title_processed'] = news['title'].lower()
-	news['description_processed'] = news['description'].lower()
+def to_lower_case(string):
+	return string.lower()
 
 
-def fix_contractions(news):
-	news['title_processed'] = contractions.fix(news['title_processed'], slang=False)
-	news['description_processed'] = contractions.fix(news['description_processed'], slang=False)
+def fix_contractions(string_processed):
+	return contractions.fix(string_processed, slang=False)
 
 
-def tokenize(news):
-	news['title_tokens'] = word_tokenize(news['title_processed'])
-	news['description_tokens'] = word_tokenize(news['description_processed'])
+def tokenize(string_processed):
+	return word_tokenize(string_processed)
 
 
-def remove_punctuations(news):
-	news['title_tokens'] = [token for token in news['title_tokens'] if (token.isalnum() or token == "covid-19")]
-	news['description_tokens'] = [token for token in news['description_tokens'] if (token.isalnum() or token == "covid-19")]
+def remove_punctuations(tokens_list):
+	return [token for token in tokens_list if (token.isalnum() or token == "covid-19")]
 
 
-def lemmatize(news):
-	news['title_tokens'] = [lemmatizer.lemmatize(tokens) for tokens in news['title_tokens']]
-	news['description_tokens'] = [lemmatizer.lemmatize(tokens) for tokens in news['description_tokens']]
+def lemmatize(tokens_list):
+	return [lemmatizer.lemmatize(tokens) for tokens in tokens_list]
 
 
-def remove_stopwords(news):
-	news['title_tokens'] = [token for token in news['title_tokens'] if not token in stop_words]
-	news['description_tokens'] = [token for token in news['description_tokens'] if not token in stop_words]
+def remove_stopwords(tokens_list):
+	return [token for token in tokens_list if not token in stop_words]
 
 
 print('STARTING PROCESSING ...')
 
+for news in tqdm(data):
+	# news['description']
+	title_processed = to_lower_case(news['title'])
+	description_processed = to_lower_case(news['description'])
 
-for news in data:
-	to_lower_case(news)
-	fix_contractions(news)
-	tokenize(news)
-	remove_punctuations(news)
-	lemmatize(news)
-	remove_stopwords(news)
+	# fix_contractions
+	title_processed = fix_contractions(title_processed)
+	description_processed = fix_contractions(description_processed)
 
+	# tokenize
+	title_tokens = tokenize(title_processed)
+	description_tokens = tokenize(description_processed)
 
-outFile = open('./data/normalized_data.json', 'w')
-json.dump(data, outFile, indent=4)
-outFile.close()
+	# remove_punctuations
+	title_tokens = remove_punctuations(title_tokens)
+	description_tokens = remove_punctuations(description_tokens)
+
+	# lemmatize
+	title_tokens = lemmatize(title_tokens)
+	description_tokens = lemmatize(description_tokens)
+
+	# remove_stopwords
+	title_tokens = remove_stopwords(title_tokens)
+	description_tokens = remove_stopwords(description_tokens)
+
+	news['title_processed'] = title_processed
+	news['description_processed'] = description_processed
+
+	news['title_tokens'] = title_tokens
+	news['description_tokens'] = description_tokens
+
+write_json_to_file(data, "normalized_data.json")

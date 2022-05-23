@@ -1,11 +1,10 @@
 import json
+from tqdm import tqdm
+from fileActions import read_file_to_json, write_json_to_file
 
 NORMALIZED_DATA_PATH = './data/normalized_data.json'
 
-print('READING DATA FROM FILE ...')
-file = open(NORMALIZED_DATA_PATH)
-data = json.load(file)
-print('READING DATA FROM FILE COMPLETED !')
+data = read_file_to_json(NORMALIZED_DATA_PATH)
 
 isCovidTraining = []
 isNotCovidTraining = []
@@ -25,7 +24,9 @@ def is_not_covid(news):
 		return False
 
 
-for news in data:
+print("STARTING PROCESSING ...")
+
+for news in tqdm(data):
 	if is_covid(news):
 		isCovidTraining.append(news)
 	elif is_not_covid(news):
@@ -34,11 +35,5 @@ for news in data:
 print('covid news count:' + str(len(isCovidTraining)))
 print('NOT covid news count:' + str(len(isNotCovidTraining)))
 
-
-outFile = open('./data/training_covid.json', 'w')
-json.dump(isCovidTraining, outFile, indent=4)
-outFile.close()
-
-outFile = open('./data/training_NOT_covid.json', 'w')
-json.dump(isNotCovidTraining, outFile, indent=4)
-outFile.close()
+write_json_to_file(isCovidTraining, "training_covid.json")
+write_json_to_file(isNotCovidTraining, "training_NOT_covid.json")

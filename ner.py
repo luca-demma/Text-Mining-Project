@@ -2,13 +2,13 @@ import nltk
 from nltk import word_tokenize
 from nltk import pos_tag
 import json
+from tqdm import tqdm
+import time
+from fileActions import read_file_to_json, write_json_to_file
 
 STRUCTURED_DATA_PATH = './data/structured_resource.json'
 
-print('READING DATA FROM FILE ...')
-file = open(STRUCTURED_DATA_PATH)
-data = json.load(file)
-print('READING DATA FROM FILE COMPLETED !')
+data = read_file_to_json(STRUCTURED_DATA_PATH)
 
 
 def ner_tree_to_list(tree):
@@ -16,13 +16,13 @@ def ner_tree_to_list(tree):
 	for chunk in tree:
 		if hasattr(chunk, 'label'):
 			ner_list.append({
-				"entity": "".join(c[0] for c in chunk), # used join to convert to string
+				"entity": "".join(c[0] for c in chunk),  # used join to convert to string
 				"label": chunk.label()
 			})
 	return ner_list
 
 
-for news in data:
+for news in tqdm(data):
 	news['title_tokens_raw'] = word_tokenize(news['title'])
 	news['title_pos_tagged'] = pos_tag(news['title_tokens_raw'])
 	ner_tree_title = nltk.ne_chunk(news['title_pos_tagged'])
@@ -34,9 +34,7 @@ for news in data:
 	news['description_ner'] = ner_tree_to_list(ner_tree_description)
 
 
-outFile = open('./data/ner.json', 'w')
-json.dump(data, outFile, indent=4)
-outFile.close()
+write_json_to_file(data, "ner.json")
 
 
 

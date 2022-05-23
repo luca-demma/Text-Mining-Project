@@ -1,15 +1,13 @@
 import json
 from collections import defaultdict
+from fileActions import read_file_to_json, write_json_to_file
+from tqdm import tqdm
 
 COVID_TRUE_PATH = './data/training_covid.json'
 COVID_FALSE_PATH = './data/training_NOT_covid.json'
 
-print('READING DATA FROM FILE ...')
-file = open(COVID_TRUE_PATH)
-isCovid = json.load(file)
-file = open(COVID_FALSE_PATH)
-notCovid = json.load(file)
-print('READING DATA FROM FILE COMPLETED !')
+isCovid = read_file_to_json(COVID_TRUE_PATH)
+notCovid = read_file_to_json(COVID_FALSE_PATH)
 
 
 def def_value(): return 0
@@ -18,13 +16,15 @@ def def_value(): return 0
 isCovidFreq = defaultdict(def_value)
 notCovidFreq = defaultdict(def_value)
 
-for news in isCovid:
+print("STEP 1/4")
+for news in tqdm(isCovid):
 	for word in news['title_tokens']:
 		isCovidFreq[word] += 1
 	for word in news['description_tokens']:
 		isCovidFreq[word] += 1
 
-for news in notCovid:
+print("STEP 2/4")
+for news in tqdm(notCovid):
 	for word in news['title_tokens']:
 		notCovidFreq[word] += 1
 	for word in news['description_tokens']:
@@ -34,29 +34,23 @@ for news in notCovid:
 isCovidFreq = {key: value for key, value in sorted(isCovidFreq.items(), key=lambda item: item[1], reverse=True)}
 notCovidFreq = {key: value for key, value in sorted(notCovidFreq.items(), key=lambda item: item[1], reverse=True)}
 
-
 # writing on file
-outFile = open('./data/frequency_covid.json', 'w')
-json.dump(isCovidFreq, outFile, indent=4)
-outFile.close()
-
-outFile = open('./data/frequency_NOT_covid.json', 'w')
-json.dump(notCovidFreq, outFile, indent=4)
-outFile.close()
-
+write_json_to_file(isCovidFreq, "frequency_covid.json.json")
+write_json_to_file(notCovidFreq, "frequency_NOT_covid.json")
 
 # probabilities
-
 isCovidProb = {}
 notCovidProb = {}
 
 isCovidWordsLength = len(isCovidFreq)
 notCovidWordsLength = len(notCovidFreq)
 
-for word in isCovidFreq:
+print("STEP 3/4")
+for word in tqdm(isCovidFreq):
 	isCovidProb[word] = isCovidFreq[word] / isCovidWordsLength
 
-for word in notCovidFreq:
+print("STEP 4/4")
+for word in tqdm(notCovidFreq):
 	notCovidProb[word] = notCovidFreq[word] / notCovidWordsLength
 
 # ordering dicts
@@ -64,10 +58,5 @@ isCovidProb = {key: value for key, value in sorted(isCovidProb.items(), key=lamb
 notCovidProb = {key: value for key, value in sorted(notCovidProb.items(), key=lambda item: item[1], reverse=True)}
 
 # writing on file
-outFile = open('./data/prob_covid.json', 'w')
-json.dump(isCovidProb, outFile, indent=4)
-outFile.close()
-
-outFile = open('./data/prob_NOT_covid.json', 'w')
-json.dump(notCovidProb, outFile, indent=4)
-outFile.close()
+write_json_to_file(isCovidProb, "prob_covid.json")
+write_json_to_file(notCovidProb, "prob_NOT_covid.json")

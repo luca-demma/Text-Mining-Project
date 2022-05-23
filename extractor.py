@@ -1,14 +1,16 @@
 import json
 import os
+from fileActions import write_json_to_file
+from tqdm import tqdm
 
 RESOURCE_PATH = '/home/luca/UNI/Text Mining/processed/release/'
 NEWSPAPERS = sorted(os.listdir(RESOURCE_PATH))
 
 resourceStructured = []
 
-for newspaper in NEWSPAPERS:
+for newspaper in tqdm(NEWSPAPERS):
 	currentNewspaperPath = RESOURCE_PATH + newspaper + '/per_day/'
-	print("Extracting: " + newspaper)
+	tqdm.write("Extracting: " + newspaper)
 	for day in sorted(os.listdir(currentNewspaperPath)):
 		dayFile = open(currentNewspaperPath + day)
 		dayData = json.load(dayFile)
@@ -21,13 +23,4 @@ for newspaper in NEWSPAPERS:
 				'description': dayData[singleNewsId]['description']
 			})
 
-outFile = open('./data/structured_resource.json', 'w')
-json.dump(resourceStructured, outFile, indent=4)
-outFile.close()
-
-"""
-structuredDataJsonString = json.dumps(resourceStructured, indent=4)
-
-with open('./data/structured_resource.json', 'w') as outfile:
-	outfile.write(structuredDataJsonString)
-"""
+write_json_to_file(resourceStructured, "structured_resource.json")
