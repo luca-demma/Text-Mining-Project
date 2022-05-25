@@ -1,5 +1,6 @@
 from fileActions import read_file_to_json
 from tqdm import tqdm
+import os
 
 CLASSIFIED_DATA_PATH = './data/classification_results.json'
 
@@ -32,3 +33,22 @@ for month in months:
 	print("Total news month: ", month, " : ", total_month_news)
 	print("Covid-19 news count month: ", month, " : ", count_covid_month_news)
 	print("Percentage of covid news in month: ", month, " : ", percentage_covid_month_news, "%\n")
+
+
+# how many covid-19 news as proportion of all articles for each outlet
+
+RESOURCE_PATH = '/home/luca/UNI/Text Mining/processed/release/'
+OUTLETS = sorted(os.listdir(RESOURCE_PATH))
+
+for outlet in OUTLETS:
+	outlet_news = [n for n in news_list_2020 if n['newspaper'] == outlet]
+	total_outlet_news = len(outlet_news)
+
+	covid_outlet_news_list = [n for n in outlet_news if n['class'] == "IS COVID"]
+	count_covid_outlet_news = len(covid_outlet_news_list)
+
+	percentage_covid_outlet_news = count_covid_outlet_news * 100 / total_outlet_news
+
+	print("Total news outlet: ", outlet, " : ", total_outlet_news)
+	print("Covid-19 news count outlet: ", outlet, " : ", count_covid_outlet_news)
+	print("Percentage of covid news for outlet: ", outlet, " : ", percentage_covid_outlet_news, "%\n")
