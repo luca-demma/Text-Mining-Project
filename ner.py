@@ -5,20 +5,35 @@ import json
 from tqdm import tqdm
 import time
 from fileActions import read_file_to_json, write_json_to_file
+from collections import defaultdict
 
-STRUCTURED_DATA_PATH = './data/structured_resource.json'
+CLASSIFIED_DATA_PATH = './data/classification_results.json'
 
-data = read_file_to_json(STRUCTURED_DATA_PATH)
+data = read_file_to_json(CLASSIFIED_DATA_PATH)
+data = [n for n in data if n['class'] == "IS COVID"]
+
+
+def def_value(): return 0
+
+
+total_ner = defaultdict(def_value)
 
 
 def ner_tree_to_list(tree):
 	ner_list = []
 	for chunk in tree:
 		if hasattr(chunk, 'label'):
+			entity = "".join(c[0] for c in chunk)  # used join to convert to string
+			label = chunk.label()
+
 			ner_list.append({
-				"entity": "".join(c[0] for c in chunk),  # used join to convert to string
-				"label": chunk.label()
+				"entity": entity,  # used join to convert to string
+				"label": label
 			})
+
+			total_ner[str(entity + " / " + label)] += 1
+
+
 	return ner_list
 
 
@@ -44,4 +59,8 @@ for news in tqdm(data):
 	news['description_ner'] = description_ner
 
 
-write_json_to_file(data, "ner.json")
+total_ner = {key: value for key, value in sorted(total_ner.items(), key=lambda item: item[1], reverse=True)}
+
+write_json_to_file(data, "ner_structured_data.json")
+
+write_json_to_file(total_ner, "ner_total.json")
