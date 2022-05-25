@@ -20,7 +20,8 @@ for newspaper in tqdm(NEWSPAPERS):
 				'date': day,
 				'year': day[:4],
 				'title': dayData[singleNewsId]['title'],
-				'description': dayData[singleNewsId]['description']
+				'description': dayData[singleNewsId]['description'],
+				'is_covid_source': dayData[singleNewsId]['is_covid']
 			})
 
 write_json_to_file(resourceStructured, "structured_resource.json")
