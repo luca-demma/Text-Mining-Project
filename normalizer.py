@@ -7,17 +7,18 @@ from nltk.tokenize import word_tokenize
 from nltk.stem.wordnet import WordNetLemmatizer
 from fileActions import write_json_to_file
 from tqdm import tqdm
+import multiprocessing
+from pqdm.processes import pqdm
 nltk.download('stopwords')
 from nltk.corpus import stopwords
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 nltk.download("punkt")
 
-from joblib import Parallel, delayed
-import multiprocessing
-
 STRUCTURED_DATA_PATH = './data/structured_resource/'
 OUTLETS = sorted(os.listdir(STRUCTURED_DATA_PATH))
+
+NUM_CORES = multiprocessing.cpu_count()
 
 
 def to_lower_case(string):
@@ -46,7 +47,8 @@ def remove_stopwords(tokens_list):
 
 print('STARTING PROCESSING ...')
 
-for outlet in tqdm(OUTLETS):
+
+def normalize(outlet):
 	outlet_file = read_file_to_json(STRUCTURED_DATA_PATH + outlet)
 	for news in outlet_file:
 		# news['description']
@@ -81,3 +83,5 @@ for outlet in tqdm(OUTLETS):
 
 	write_json_to_file(outlet_file, "normalized_data/" + outlet)
 
+
+pqdm(OUTLETS, normalize, n_jobs=NUM_CORES)

@@ -2,8 +2,11 @@ import json
 import os
 from collections import defaultdict
 from fileActions import read_file_to_json, write_json_to_file
-from tqdm import tqdm
 import math
+from pqdm.processes import pqdm
+import multiprocessing
+
+NUM_CORES = multiprocessing.cpu_count()
 
 PROB_COVID_PATH = './data/prob_covid.json'
 PROB_NOT_COVID_PATH = './data/prob_NOT_covid.json'
@@ -31,7 +34,8 @@ priorProbNotCovid2020 = 0.75
 print("priorProbCovid2020 ", priorProbCovid2020)
 print("priorProbNotCovid2020 ", priorProbNotCovid2020)
 
-for outlet in tqdm(OUTLETS):
+
+def classify(outlet):
 	outlet_file = read_file_to_json(NORMALIZED_DATA_PATH + outlet)
 	for news in outlet_file:
 		isCovidScore = 0
@@ -69,3 +73,5 @@ for outlet in tqdm(OUTLETS):
 
 	write_json_to_file(outlet_file, "classification_results/" + outlet)
 
+
+pqdm(OUTLETS, classify, n_jobs=NUM_CORES)

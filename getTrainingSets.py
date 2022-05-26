@@ -2,6 +2,10 @@ import json
 import os
 from tqdm import tqdm
 from fileActions import read_file_to_json, write_json_to_file
+import multiprocessing
+from pqdm.processes import pqdm
+
+NUM_CORES = multiprocessing.cpu_count()
 
 NORMALIZED_DATA_PATH = './data/normalized_data/'
 OUTLETS = sorted(os.listdir(NORMALIZED_DATA_PATH))
@@ -21,9 +25,7 @@ def is_not_covid(news):
 		return False
 
 
-print("STARTING PROCESSING ...")
-
-for outlet in tqdm(OUTLETS):
+def get_training_sets(outlet):
 	isCovidTraining = []
 	isNotCovidTraining = []
 	outlet_file = read_file_to_json(NORMALIZED_DATA_PATH + outlet)
@@ -35,3 +37,5 @@ for outlet in tqdm(OUTLETS):
 	write_json_to_file(isCovidTraining, "training_covid/" + outlet)
 	write_json_to_file(isNotCovidTraining, "training_NOT_covid/" + outlet)
 
+
+pqdm(OUTLETS, get_training_sets, n_jobs=NUM_CORES)

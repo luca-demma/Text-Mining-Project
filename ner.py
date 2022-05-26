@@ -61,6 +61,6 @@ for news in tqdm(data):
 
 total_ner = {key: value for key, value in sorted(total_ner.items(), key=lambda item: item[1], reverse=True)}
 
-write_json_to_file(data, "ner_structured_data.json")
+# write_json_to_file(data, "ner_structured_data.json")
 
 write_json_to_file(total_ner, "ner_total.json")
