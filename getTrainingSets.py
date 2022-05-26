@@ -1,13 +1,10 @@
 import json
+import os
 from tqdm import tqdm
 from fileActions import read_file_to_json, write_json_to_file
 
-NORMALIZED_DATA_PATH = './data/normalized_data.json'
-
-data = read_file_to_json(NORMALIZED_DATA_PATH)
-
-isCovidTraining = []
-isNotCovidTraining = []
+NORMALIZED_DATA_PATH = './data/normalized_data/'
+OUTLETS = sorted(os.listdir(NORMALIZED_DATA_PATH))
 
 
 def is_covid(news):
@@ -18,7 +15,7 @@ def is_covid(news):
 
 
 def is_not_covid(news):
-	if int(news['year']) <= 2019:
+	if int(news['date'][:4]) <= 2019:
 		return True
 	else:
 		return False
@@ -26,14 +23,15 @@ def is_not_covid(news):
 
 print("STARTING PROCESSING ...")
 
-for news in tqdm(data):
-	if is_covid(news):
-		isCovidTraining.append(news)
-	elif is_not_covid(news):
-		isNotCovidTraining.append(news)
+for outlet in tqdm(OUTLETS):
+	isCovidTraining = []
+	isNotCovidTraining = []
+	outlet_file = read_file_to_json(NORMALIZED_DATA_PATH + outlet)
+	for news in outlet_file:
+		if is_covid(news):
+			isCovidTraining.append(news)
+		elif is_not_covid(news):
+			isNotCovidTraining.append(news)
+	write_json_to_file(isCovidTraining, "training_covid/" + outlet)
+	write_json_to_file(isNotCovidTraining, "training_NOT_covid/" + outlet)
 
-print('covid news count:' + str(len(isCovidTraining)))
-print('NOT covid news count:' + str(len(isNotCovidTraining)))
-
-write_json_to_file(isCovidTraining, "training_covid.json")
-write_json_to_file(isNotCovidTraining, "training_NOT_covid.json")

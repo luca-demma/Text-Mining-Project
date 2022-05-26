@@ -1,7 +1,9 @@
 # Report for the project-based exam for DM882: Text Mining
 ## Option 1 : News Articles
 ### Luca Demma
+
 ---
+
 ## Introduction
 The goal of this project is to implement a Natural Language Processing (NLP) pipeline to classify news articles taken from the front pages of 172 outlets in 11 countries using the semi-structured data source made by this project [http://sciride.org/news.html](http://sciride.org/news.html) , data used is present at this link provided by the teacher [https://news-mine.s3.eu-west-2.amazonaws.com/processed.tar.gz](https://news-mine.s3.eu-west-2.amazonaws.com/processed.tar.gz).
 
@@ -26,5 +28,12 @@ For the implementation I used the python programming language because is the mos
     -   punkt
 -   **contractions**
 
+---
+
 ## Pipeline
+
+The following picture describes the pipeline of the processing implemented by the code divided in 6 macro steps:
+
+
 ![Pipeline](./report_pics/Text%20Mining%20Pipeline.drawio.svg)
+

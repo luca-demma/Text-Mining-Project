@@ -6,9 +6,8 @@ from tqdm import tqdm
 RESOURCE_PATH = '/home/luca/UNI/Text Mining/processed/release/'
 NEWSPAPERS = sorted(os.listdir(RESOURCE_PATH))
 
-resourceStructured = []
-
 for newspaper in tqdm(NEWSPAPERS):
+	resourceStructured = []
 	currentNewspaperPath = RESOURCE_PATH + newspaper + '/per_day/'
 	tqdm.write("Extracting: " + newspaper)
 	for day in sorted(os.listdir(currentNewspaperPath)):
@@ -18,10 +17,11 @@ for newspaper in tqdm(NEWSPAPERS):
 			resourceStructured.append({
 				'newspaper': newspaper,
 				'date': day,
-				'year': day[:4],
 				'title': dayData[singleNewsId]['title'],
 				'description': dayData[singleNewsId]['description'],
 				'is_covid_source': dayData[singleNewsId]['is_covid']
 			})
+	write_json_to_file(resourceStructured, "structured_resource/" + newspaper)
 
-write_json_to_file(resourceStructured, "structured_resource.json")
+
+
