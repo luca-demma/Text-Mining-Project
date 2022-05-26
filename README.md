@@ -25,3 +25,6 @@ For the implementation I used the python programming language because is the mos
     -   stopwords
     -   punkt
 -   **contractions**
+
+## Pipeline
+![Pipeline](./report_pics/Text%20Mining%20Pipeline.drawio.svg)
