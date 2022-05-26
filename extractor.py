@@ -6,6 +6,7 @@ import multiprocessing
 
 NUM_CORES = multiprocessing.cpu_count()
 
+# where is the source data
 RESOURCE_PATH = '/home/luca/UNI/Text Mining/processed/release/'
 OUTLETS = sorted(os.listdir(RESOURCE_PATH))
 
