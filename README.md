@@ -15,3 +15,13 @@ The implementation of the pipeline should provide 3 types of results:
     - How many COVID-19 news have been issued as proportion of articles in an outlet (e.g. CNN) in 2020
 
 -   Getting the most commonly mentioned Named Entities in COVID-19 news doing Named Entity Recognition (NER)
+
+For the implementation I used the python programming language because is the most used language for NLP and there are a lot of libraries easily importable as the ones I used:
+-   **NLTK** *([https://www.nltk.org/](https://www.nltk.org/))* and its modules:
+    -   word_tokenize
+    -   WordNetLemmatizer
+    -   pos_tag
+    -   ne_chunk
+    -   stopwords
+    -   punkt
+-   **contractions**
