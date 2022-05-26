@@ -11,6 +11,8 @@ def read_file_to_json(file_path):
 
 
 def write_json_to_file(json_to_write, name):
-	out_file = open('./data/' + name, 'w')
+	path = './data/' + name
+	os.makedirs(os.path.dirname(path), exist_ok=True)
+	out_file = open(path, 'w')
 	json.dump(json_to_write, out_file, indent=4)
 	out_file.close()
