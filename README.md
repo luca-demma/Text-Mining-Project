@@ -4,7 +4,7 @@
 
 ---
 
-## Introduction
+# Introduction
 The goal of this project is to implement a Natural Language Processing (NLP) pipeline to classify news articles taken from the front pages of 172 outlets in 11 countries using the semi-structured data source made by this project [http://sciride.org/news.html](http://sciride.org/news.html) , data used is present at this link provided by the teacher [https://news-mine.s3.eu-west-2.amazonaws.com/processed.tar.gz](https://news-mine.s3.eu-west-2.amazonaws.com/processed.tar.gz).
 
 The implementation of the pipeline should provide 3 types of results:
@@ -28,11 +28,11 @@ For the implementation I used the Python programming language because is the mos
     -   *punkt*
 -   **contractions**
 
-Having to deal with huge quantity of data I chose to implement most of the scripts in a multi-process way using the power of the parallelism. This has been possible mainly because the majority of the operations are parallelizable not handling sequetial data. Using this technique permites to speed up the whole process up to 8 times in modern computers with multiple CPUs.
+Having to deal with huge quantity of data I chose to implement most of the scripts in a multi-process way using the power of the parallelism. This has been possible mainly because the majority of the operations are parallelizable not handling sequetial data. Using this technique permites to speed up the whole process up to 8 times in modern computers with multiple CPUs. To implement multiprocessing I used the Python module *pqdm*.
 
 ---
 
-## Pipeline
+# Pipeline
 
 The following picture describes the pipeline of the processing implemented by the code divided in 6 macro steps:
 -   File cleaning
@@ -57,7 +57,7 @@ Removing of all the articles issued before the 2019, as stated in the project de
 To do so I run a simple bash command that finds all the files name that don't start with `2019` and `2020`:
 
 ```bash
-find . -type f ! -name '2019*' -and ! -name '2020*' -and ! -name 2021*' -and ! -name '2022*' -delete
+find . -type f ! -name '2019*' -and ! -name '2020*' -delete
 ```
 
 ### Unzipping all the files
@@ -91,10 +91,29 @@ My goal here was to strip down the input data giving a structure, to do this I u
     "date": "20190101",
     "title": "Shutdown talks broken between...",
     "description": "As the government shutdown en...",
-    "is_covid_source": false  // present in the source, keyword based
+    "is_covid_source": false  // comes from the source, keyword based
 }
 ```
 
 I save all the article in the format shown previously in an array of objects in `./data/structured_resource/outlet_name` where *outlet_name* is the file name of the json rapresented by the outlet name e.g. *abcnews.go.com*
 
 In this script I used multiprocessing to speed up considerably the execution speed.
+
+## Step 2 : Normalization
+This step is crucial to transform natural language in a structured data source that can be handled by a software.
+
+In my pipeline I used the following normalization techniques for titles and descriptions in the following order (implementation in `normalizer.py` file):
+-   **to lower case** : transforming the texts to lower case to make easier matching for the same words with different casing
+-   **expanding contractions** : expanding the english language contractions (e.g. I'm -> I am). I used the the module [contractions](https://github.com/kootenpv/contractions)
+-   **tokenization** : 
+-   **removing punctuations** :
+-   **lemmatization** :
+-   **removing stopwords** :
+
+## Step 3 : Classification
+
+## Step 4 : Classification Accuracy Verification
+
+## Step 5 : Analysis
+
+# Conclusions

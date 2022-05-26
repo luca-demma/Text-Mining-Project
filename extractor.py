@@ -28,4 +28,5 @@ def extract(outlet):
 	write_json_to_file(resourceStructured, "structured_resource/" + outlet)
 
 
+# multiprocessing
 pqdm(OUTLETS, extract, n_jobs=NUM_CORES)

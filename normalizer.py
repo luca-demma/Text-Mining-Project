@@ -84,4 +84,5 @@ def normalize(outlet):
 	write_json_to_file(outlet_file, "normalized_data/" + outlet)
 
 
+# multiprocessing
 pqdm(OUTLETS, normalize, n_jobs=NUM_CORES)
