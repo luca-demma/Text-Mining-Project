@@ -30,7 +30,6 @@ For the implementation I used the Python programming language because is the mos
 
 Having to deal with huge quantity of data I chose to implement most of the scripts in a multi-process way using the power of the parallelism. This has been possible mainly because the majority of the operations are parallelizable not handling sequetial data. Using this technique permites to speed up the whole process up to 8 times in modern computers with multiple CPUs. To implement multiprocessing I used the Python module *pqdm*.
 
----
 
 # Pipeline
 
@@ -105,12 +104,128 @@ This step is crucial to transform natural language in a structured data source t
 In my pipeline I used the following normalization techniques for titles and descriptions in the following order (implementation in `normalizer.py` file):
 -   **to lower case** : transforming the texts to lower case to make easier matching for the same words with different casing
 -   **expanding contractions** : expanding the english language contractions (e.g. I'm -> I am). I used the the module [contractions](https://github.com/kootenpv/contractions)
--   **tokenization** : 
--   **removing punctuations** :
--   **lemmatization** :
--   **removing stopwords** :
+-   **tokenization** : using *nltk.tokenize.word_tokenize* that uses the NLTK's reccomended tokenizer to split a sentence in tokens. Internally it uses a series of regular expressions to split the tokens by white spaces and punctuations.
+-   **removing punctuations** : using Python list comprehensions to remove all the tokens that contain punctuations. For this I'm using the Python built-in function `isalnum()` that returns true if a string contains only alphanumeric characters, I added a condition to not remove the occurrences of *'covid-19'*.
+    ```python
+    [token for token in tokens_list if (token.isalnum() or token == "covid-19")]
+    ```
+
+-   **lemmatization** : using WordNet corpus lemmatizer WordNetLemmatizer to lemmatize the tokens got in the previous step. I choose to lemmatize instead of stemming because stemming is not so efficient due to the fact that tends to stem to unwanted words.
+-   **removing stopwords** : stop words are commonly used words that occure frenquently and usually don't provide additional information. For doing this I used the NLTK corpus *stopwords* that contains a list of stopwords in 11 languages. 
+    
+    This is the list for english *(Taken from: [https://www.nltk.org/book/ch02.html](https://www.nltk.org/book/ch02.html))*:
+    ```python
+    ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
+    'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers',
+    'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves',
+    'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are',
+    'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does',
+    'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until',
+    'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into',
+    'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down',
+    'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here',
+    'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more',
+    'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so',
+    'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now']
+    ```
+    and I used this list comprehions command to check if a token is included in the list to remove it:
+    ```python
+    [token for token in tokens_list if not token in stop_words]
+    ```
+
+
 
 ## Step 3 : Classification
+To classify the news articles I used the normalized data produced in the previous step to implement a Naive Bayes classifier from scratch.
+
+A Naive Bayes classifier is a supervised learning algorithm which is based on Bayes Theorem. It's a probabilistic classifier because choses the class of an input based of a probability of its features.
+
+Bayes Theorem formula: ![Bayes Theorem formula](https://miro.medium.com/max/1020/1*tjcmj9cDQ-rHXAtxCu5bRQ.png)
+
+Where:
+
+- P(A|B) is Posterior probability
+- P(B|A) is Likelihood probability
+- P(A) is Prior Probability:
+- P(B) is Marginal Probability
+
+### Getting the training sets
+To use the formula for the text classification problem we need to calculate the probabilities that each word has in covid and non covid articles. To do so two training sets are needed for the training, the TRUE training set and the FALSE one, that rappresent respectively the set of articles that are covid related and the one that is not.
+
+To get the training set I wrote a script `getTrainingSets.py` where i divide the normalized articles data in the TRUE and FALSE set. 
+
+In the FALSE set I used the articles written before 2020 because covid was still undected and for the TRUE set I used the articles that contain in the title or in the description the keywords *covid-19* or *coronavirus*.
+
+The training sets have been saved respectively in `./data/training_covid` and `./data/training_NOT_covid`
+
+### Getting the words probabilities
+Having the FALSE and TRUE training sets I can loop on them to calculate the frequencies of the words occurencies and from them calculate the probability for each word using `frequency.py`
+
+I'm using a Python default_dict data structure to ease the process of creating the dictionary to save the words frequencies and probabilities.
+
+I chose to treat in the same way the words found in the title and the ones found in the description. 
+
+Having the words frequency I calculate the probability of each word for the both sets (diving the frequency of the word by the sum of all the occurences): 
+
+```python
+for word in tqdm(isCovidFreq):
+    isCovidProb[word] = isCovidFreq[word] / isCovidWordsLength
+```
+
+in this way I get the most commond words in covid news and non covid saved in `./data/prob_covid.json` and `./data/prob_NOT_covid.json`.
+
+The most 20 common words for covid news:
+```json
+"coronavirus": 0.043835909923861924,
+"covid-19": 0.015808012474694544,
+"news": 0.010715819839904057,
+"ha": 0.009922155787593942,
+"new": 0.008365884681941676,
+"pandemic": 0.008240723643182362,
+"case": 0.006377259274490732,
+"time": 0.005009907138240168,
+"say": 0.004845602728821659,
+"trump": 0.004683742003155996,
+"people": 0.004504464476924605,
+"lockdown": 0.004464077049082143,
+"health": 0.004126004509529567,
+"outbreak": 0.0041117867131493825,
+"wa": 0.0039550355080578475,
+"death": 0.0037163542513254984,
+"said": 0.003695160848596286,
+"world": 0.0035532938990902566,
+"state": 0.0033374499777935793,
+"online": 0.003325098267188294,
+```
+
+The most 20 common words for NON covid news:
+```json
+"news": 0.010683131939110142,
+"ha": 0.008041611622448533,
+"wa": 0.006844409412116912,
+"new": 0.006049156914812433,
+"time": 0.005171104253908384,
+"online": 0.005122369938670393,
+"trump": 0.004485226975135559,
+"daily": 0.003886308735628415,
+"say": 0.0037605308472398883,
+"year": 0.0036743987658769293,
+"mail": 0.0034204825461542467,
+"star": 0.0031140344278150615,
+"one": 0.002730815712720413,
+"said": 0.0027005474477373444,
+"world": 0.002651965678131895,
+"video": 0.0026342061550171606,
+"president": 0.0026308260649487596,
+"first": 0.002223248220952618,
+"day": 0.002182060900166639,
+"woman": 0.002161523440796165,
+```
+
+### Classification
+
+
+
 
 ## Step 4 : Classification Accuracy Verification
 

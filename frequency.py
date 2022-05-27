@@ -46,8 +46,8 @@ write_json_to_file(notCovidFreq, "frequency_NOT_covid.json")
 isCovidProb = {}
 notCovidProb = {}
 
-"""isCovidWordsLength = len(isCovidFreq)
-notCovidWordsLength = len(notCovidFreq)"""
+# isCovidWordsLength = len(isCovidFreq)
+# notCovidWordsLength = len(notCovidFreq)
 isCovidWordsLength = sum(isCovidFreq.values())
 notCovidWordsLength = sum(notCovidFreq.values())
 

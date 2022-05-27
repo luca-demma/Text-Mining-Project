@@ -38,4 +38,5 @@ def get_training_sets(outlet):
 	write_json_to_file(isNotCovidTraining, "training_NOT_covid/" + outlet)
 
 
+# multiprocessing
 pqdm(OUTLETS, get_training_sets, n_jobs=NUM_CORES)
