@@ -247,10 +247,14 @@ After the classification we need to verify how correct is the classification, to
 
     The accuracy calculated by the script using the flag *is_covid* from the source is of **0.95**
 -   **Precision / Recall** : this method gives us better insight because tells us:
-    - **Precision** : which proportion of the TRUE set is correct (i.e. it's high if the model produces few false positives) ![precision](./report_pics/precision.png)
+    - **Precision** : which proportion of the TRUE set is correct (i.e. it's high if the model produces few false positives) 
+  
+      ![precision](./report_pics/precision.png)
   
         The precision calculated by the script using the flag *is_covid* from the source is of **0.73**
-    - **Recall** : which proportion of the "real" positives has been correctly classified. (i.e. it's high if the model produces few false negatives) ![recall](./report_pics/recall.png)
+    - **Recall** : which proportion of the "real" positives has been correctly classified. (i.e. it's high if the model produces few false negatives) 
+  
+        ![recall](./report_pics/recall.png)
   
         The precision calculated by the script using the flag *is_covid* from the source is of **0.95**
 
