@@ -28,12 +28,12 @@ For the implementation I used the Python programming language because is the mos
     -   *punkt*
 -   **contractions**
 
-Having to deal with huge quantity of data I chose to implement most of the scripts in a multi-process way using the power of the parallelism. This has been possible mainly because the majority of the operations are parallelizable not handling sequetial data. Using this technique permites to speed up the whole process up to 8 times in modern computers with multiple CPUs. To implement multiprocessing I used the Python module *pqdm*.
+Having to deal with huge quantity of data I chose to implement most of the scripts in a multi-process way using the power of parallelism. This has been possible mainly because the majority of the operations are parallelizable not handling sequential data. Using this technique permits to speed up the whole process up to 8 times in modern computers with multiple CPUs. To implement multiprocessing I used the Python module *pqdm*.
 
 
 # Pipeline
 
-The following picture describes the pipeline of the processing implemented by the code divided in 6 macro steps:
+The following picture describes the pipeline of the processing implemented by the code divided into 6 macro steps:
 -   File cleaning
 -   Extraction
 -   Normalization
@@ -43,17 +43,17 @@ The following picture describes the pipeline of the processing implemented by th
 
 ![Pipeline](./report_pics/Text%20Mining%20Pipeline.drawio.svg)
 
-Each step saves in the its output result in the `data` folder in the json format. For the steps that have as output big quantity of data it has been chosen to split the results in sub-files for each news outlet to avoid problems related to out-of-memory.
+Each step saves its output result in the `data` folder in the json format. For the steps that have as output a big quantity of data it has been chosen to split the results into sub-files for each news outlet to avoid problems related to out-of-memory.
 
 ## Step 0 : File cleaning
-The first step is related to file cleaning and preparation, in this step I started to clean the source data and to make it easily consumable by the Python implentation of the pipeline.
+The first step is related to file cleaning and preparation, in this step I started to clean the source data and make it easily consumable by the Python implementation of the pipeline.
 
 To do so I followed the following actions:
 
 ### Removing old articles
-Removing of all the articles issued before the 2019, as stated in the project description to handle a reasonable count of news we use only the 2019 and 2020 ones. 
+Removing all the articles issued before 2019, as stated in the project description to handle a reasonable count of news we use only the 2019 and 2020 ones. 
 
-To do so I run a simple bash command that finds all the files name that don't start with `2019` and `2020`:
+To do so I run a simple bash command that finds all the files names that don't start with `2019` and `2020`:
 
 ```bash
 find . -type f ! -name '2019*' -and ! -name '2020*' -delete
@@ -68,17 +68,17 @@ To do so I used a simple bash command to decompress all the files found in the f
 gunzip -rv .
 ```
 
-### Remove all the non english news outlets
-My implementation is based on the handle of just a single language of news, for this reason in this step I'm gonna remove from the news outlets list all the outlets that are not in english language.
+### Remove all the non-english news outlets
+My implementation is based on the handle of just a single language of news, for this reason in this step I'm gonna remove from the news outlets list all the outlets that are not in the english language.
 
 To do so I wrote a Python script `english.py` that uses the file provided by the teacher `AvailableOutlets.txt` to delete all the folders that use non english language. After this removal the news outlets became 91.
 
-After this steps the data has been prepared to be consumed by the pipeline in a more convient way.
+After this steps the data has been prepared to be consumed by the pipeline in a more convenient way.
 
 ## Step 1 : Extraction
 In this step I aim to clean the data source from all the unnecessary fields and to give a structure that can make it easier the handling.
 
-I had to think how to handle all the data to avoid out-of-memory problems because my first thought has been to save every cleaned news data in a single json file but this idea fastly showed its limitations because of the data size related problems, the python script was often crashing when creating the huge single json file with out-of-memory error.
+I had to think about how to handle all the data to avoid out-of-memory problems because my first thought has been to save every cleaned news data in a single json file but this idea fastly showed its limitations because of the data size-related problems, the python script was often crashing when creating the huge single json file with out-of-memory error.
 
 For this reason I chose to handle the data by steps for every outlet, this required some more reasoning but it made possible the handling of the huge data source.
 
@@ -94,12 +94,12 @@ My goal here was to strip down the input data giving a structure, to do this I u
 }
 ```
 
-I save all the article in the format shown previously in an array of objects in `./data/structured_resource/outlet_name` where *outlet_name* is the file name of the json rapresented by the outlet name e.g. *abcnews.go.com*
+I save all the articles in the format shown previously in an array of objects in `./data/structured_resource/outlet_name` where *outlet_name* is the file name of the json represented by the outlet name e.g. *abcnews.go.com*
 
 In this script I used multiprocessing to speed up considerably the execution speed.
 
 ## Step 2 : Normalization
-This step is crucial to transform natural language in a structured data source that can be handled by a software.
+This step is crucial to transform natural language into a structured data source that can be handled by software.
 
 In my pipeline I used the following normalization techniques for titles and descriptions in the following order (implementation in `normalizer.py` file):
 -   **to lower case** : transforming the texts to lower case to make easier matching for the same words with different casing
@@ -138,7 +138,7 @@ In my pipeline I used the following normalization techniques for titles and desc
 ## Step 3 : Classification
 To classify the news articles I used the normalized data produced in the previous step to implement a Naive Bayes classifier from scratch.
 
-A Naive Bayes classifier is a supervised learning algorithm which is based on Bayes Theorem. It's a probabilistic classifier because choses the class of an input based of a probability of its features.
+A Naive Bayes classifier is a supervised learning algorithm that is based on Bayes Theorem. It's a probabilistic classifier because it choses the class of an input based of the probability of its features.
 
 Bayes Theorem formula: ![Bayes Theorem formula](https://miro.medium.com/max/1020/1*tjcmj9cDQ-rHXAtxCu5bRQ.png)
 
@@ -150,29 +150,29 @@ Where:
 - P(B) is Marginal Probability
 
 ### Getting the training sets
-To use the formula for the text classification problem we need to calculate the probabilities that each word has in covid and non covid articles. To do so two training sets are needed for the training, the TRUE training set and the FALSE one, that rappresent respectively the set of articles that are covid related and the one that is not.
+To use the formula for the text classification problem we need to calculate the probabilities that each word has in covid and non covid articles. To do so two training sets are needed for the training, the TRUE training set and the FALSE one, that represent respectively the set of articles that are covid related and the one that is not.
 
 To get the training set I wrote a script `getTrainingSets.py` where i divide the normalized articles data in the TRUE and FALSE set. 
 
-In the FALSE set I used the articles written before 2020 because covid was still undected and for the TRUE set I used the articles that contain in the title or in the description the keywords *covid-19* or *coronavirus*.
+In the FALSE set I used the articles written before 2020 because covid was still undetected and for the TRUE set I used the articles that contain in the title or in the description the keywords *covid-19* or *coronavirus*.
 
 The training sets have been saved respectively in `./data/training_covid` and `./data/training_NOT_covid`
 
 ### Getting the words probabilities
-Having the FALSE and TRUE training sets I can loop on them to calculate the frequencies of the words occurencies and from them calculate the probability for each word using `frequency.py`
+Having the FALSE and TRUE training sets I can loop on them to calculate the frequencies of the words occurences and from them calculate the probability for each word using `frequency.py`
 
-I'm using a Python default_dict data structure to ease the process of creating the dictionary to save the words frequencies and probabilities.
+I'm using a Python default_dict data structure to ease the process of creating the dictionary to save the frequencies and probabilities of the words.
 
 I chose to treat in the same way the words found in the title and the ones found in the description. 
 
-Having the words frequency I calculate the probability of each word for the both sets (diving the frequency of the word by the sum of all the occurences): 
+Having the words frequencies I calculate the probability of each word for both sets (diving the frequency of the word by the sum of all the occurrences): 
 
 ```python
 for word in tqdm(isCovidFreq):
     isCovidProb[word] = isCovidFreq[word] / isCovidWordsLength
 ```
 
-in this way I get the most commond words in covid news and non covid saved in `./data/prob_covid.json` and `./data/prob_NOT_covid.json`.
+in this way I get the most common words in covid news and non covid saved in `./data/prob_covid.json` and `./data/prob_NOT_covid.json`.
 
 The most 20 common words for covid news:
 ```json
@@ -227,7 +227,7 @@ Now that we have the tokens probabilities for the TRUE and the FALSE sets we can
 
 Doing like this I found 2 problems:
 -   Tokens that are in a set and not in the other crash the script because the value is not found in the dictionary. To solve this problem for tokens that don't have a probability value I use the lowest probability for that tokens set.
--   Using the multiplications of probabilities we can incurr in numerical underflow: being the values very small and multuplyng them by each other with large inputs the result is a very small number and it can get unstable. To fix this I used the sum of the logs of the probabilities instead of the multiplication of them. This fixes the small number problem and gives more reasonable classification scores.
+-   Using the multiplications of probabilities we can incur in numerical underflow: being the values very small and multiplyng them by each other with large inputs the result is a very small number and it can get unstable. To fix this I used the sum of the logs of the probabilities instead of the multiplication of them. This fixes the small number problem and gives more reasonable classification scores.
 ```r   
 P(yi | x1, x2, …, xn) = log(P(x1|y1)) + log(P(x2|y1)) + … log(P(xn|y1))+ log(P(yi))
 ```
@@ -236,12 +236,12 @@ To get the prior probabilities I used the provided flag *is_covid*.
 
 The result of the classification is stored in `./data/classification_results` for each outlet in json format. The class is of every news is found in the field *class* and can be *IS COVID* or *NOT COVID*. Is also possible to see the calculated score for each news for both classes.
 
-It's important to note the Naive Bayes classifier doesn't take care of the postion of the words and their relations because we provide the data as a bag of words but it's an algorithm that has low variance also having high bias, that means that works well in classification despite this.
+It's important to note the Naive Bayes classifier doesn't take care of the position of the words and their relations because we provide the data as a bag of words but it's an algorithm that has low variance also having high bias, which means that works well in classification despite this.
 
 
 ## Step 4 : Classification Accuracy Verification
 After the classification we need to verify how correct is the classification, to do so I used two formal ways to calculate correctness using `accuracy.py`:
--   **Accuracy** : tells us how many input have been classified correctly with the following formula: ![accuracy formula](./report_pics/accuracy.png)
+-   **Accuracy** : tells us how many inputs have been classified correctly with the following formula: ![accuracy formula](./report_pics/accuracy.png)
 
     This gives us a general view of the correctness of the classification because is not efficient in class-imbalanced data set.
 
@@ -258,7 +258,7 @@ After the classification we need to verify how correct is the classification, to
   
         The precision calculated by the script using the flag *is_covid* from the source is of **0.95**
 
-    From the results (saved in `./data/accuracy_results.json`) we can see that the classifier tends to be more oriented in classyfing articles to be about covid because of the not sho how precision. But if an article is about covid the model classifyes it correctly 95% of the times.
+    From the results (saved in `./data/accuracy_results.json`) we can see that the classifier tends to be more oriented in classyfing articles to be about covid because of the not sho how precision. But if an article is about covid the model classifies it correctly 95% of the time.
 
 ## Step 5 : Analysis
 Now that we have the classified data we can execute data analysis on it for this project we are going to:
@@ -270,7 +270,7 @@ Now that we have the classified data we can execute data analysis on it for this
 -   Getting the most commonly mentioned Named Entities in COVID-19 news doing Named Entity Recognition (NER)
 
 ### Proportions
-The script the reads the classyfied data and returns the proportions is the `filters.py` file and saved as json files in `./data/analysis`
+The script that reads the classyfied data and returns the proportions is the `filters.py` file and saved as json files in `./data/analysis`
 
 ### How many COVID-19 news have been issued as proportion of all articles in 2020?
 | total_2020 | covid_2020 | percentage_2020 |
@@ -387,17 +387,17 @@ The script the reads the classyfied data and returns the proportions is the `fil
 | wsj.com                 | 122570 | 25730 | 20.99208615485029  |
 
 ## Named Entity Recognition (NER)
-The goal of NER is to find the most commong entities in a text using corpora to distinguish words that refers to some entity.
+The goal of NER is to find the most common entities in a text using corpora to distinguish words that refer to some entity.
 
 I used NLTK ne_chunk and pos_tag in the `ner.py` script to extract the most common entities of covid related news.
 
-Before using NLTK's NER I tryed with the Stanford one but it was extremely slow for the data size.
+Before using NLTK's NER I tried with the Stanford one but it was extremely slow for the data size.
 
 The NLTK NER pipeline requires to provide to the ne_chunk function pos-tagged text.
 
 The NLTK module for NERing the text is based on a supervised machine learning model named MaxEnt classifier. This algorithm uses a manually annotated corpus specifically for Entity Recognition.
 
-For the training of the model have been provided various features as: the POS tag, if the words starts with capital letter, if the word is a lemma, the pos tag of the previous and next word.
+For the training of the model have been provided various features as: the POS tag, if the words start with a capital letter, if the word is a lemma, the pos tag of the previous and next word.
 
 The result of the execution of the script is saved in `ner_total.py`.
 
@@ -437,7 +437,7 @@ The NER found a lot of names related to the newspapers titles that could be omit
 # How to run the code
 The code expects as input pre-cleaned files following the Step 0 steps in a folder specified in `RESOURCE_PATH` variable for the `extractor.py` file and `DIRS_BASE_PATH` for the `english.py` file.
 
-After this pre-configuration the code can be launched executing the script `RUN_FULL_PIPELINE.py` that executes the steps from 1 to 5.
+After this pre-configuration the code can be launched by executing the script `RUN_FULL_PIPELINE.py` that executes the steps from 1 to 5.
 
 **Sometimes the complete script can fail especially after the last call of ner.py file. If this happens the file contains the name of the scripts to be launched in the correct order**
 
