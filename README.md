@@ -228,13 +228,15 @@ Now that we have the tokens probabilities for the TRUE and the FALSE sets we can
 Doing like this I found 2 problems:
 -   Tokens that are in a set and not in the other crash the script because the value is not found in the dictionary. To solve this problem for tokens that don't have a probability value I use the lowest probability for that tokens set.
 -   Using the multiplications of probabilities we can incurr in numerical underflow: being the values very small and multuplyng them by each other with large inputs the result is a very small number and it can get unstable. To fix this I used the sum of the logs of the probabilities instead of the multiplication of them. This fixes the small number problem and gives more reasonable classification scores.
-    ```r   
-    P(yi | x1, x2, …, xn) = log(P(x1|y1)) + log(P(x2|y1)) + … log(P(xn|y1))+ log(P(yi))
-    ```
+```r   
+P(yi | x1, x2, …, xn) = log(P(x1|y1)) + log(P(x2|y1)) + … log(P(xn|y1))+ log(P(yi))
+```
 
 To get the prior probabilities I used the provided flag *is_covid*.
 
 The result of the classification is stored in `./data/classification_results` for each outlet in json format. The class is of every news is found in the field *class* and can be *IS COVID* or *NOT COVID*. Is also possible to see the calculated score for each news for both classes.
+
+It's important to note the Naive Bayes classifier doesn't take care of the postion of the words and their relations because we provide the data as a bag of words but it's an algorithm that has low variance also having high bias, that means that works well in classification despite this.
 
 
 ## Step 4 : Classification Accuracy Verification
@@ -380,6 +382,59 @@ The script the reads the classyfied data and returns the proportions is the `fil
 | wnd.com                 | 75712  | 8899  | 11.753751056635672 |
 | wsj.com                 | 122570 | 25730 | 20.99208615485029  |
 
+## Named Entity Recognition (NER)
+The goal of NER is to find the most commong entities in a text using corpora to distinguish words that refers to some entity.
+
+I used NLTK ne_chunk and pos_tag in the `ner.py` script to extract the most common entities of covid related news.
+
+Before using NLTK's NER I tryed with the Stanford one but it was extremely slow for the data size.
+
+The NLTK NER pipeline requires to provide to the ne_chunk function pos-tagged text.
+
+The NLTK module for NERing the text is based on a supervised machine learning model named MaxEnt classifier. This algorithm uses a manually annotated corpus specifically for Entity Recognition.
+
+For the training of the model have been provided various features as: the POS tag, if the words starts with capital letter, if the word is a lemma, the pos tag of the previous and next word.
+
+The result of the execution of the script is saved in `ner_total.py`.
+
+Here the most common Entities found by the script:
+```json
+"Coronavirus / GPE": 207047,
+"Trump / PERSON": 86396,
+"China / GPE": 80622,
+"U.S. / GPE": 75092,
+"UK / ORGANIZATION": 48854,
+"ABCNews / ORGANIZATION": 40700,
+"DailyMailOnline / PERSON": 40337,
+"Australia / GPE": 38269,
+"FoxNews / PERSON": 33981,
+"Guardian / GPE": 31284,
+"US / GSP": 30735,
+"LosAngeles / GPE": 29122,
+"WashingtonPost / ORGANIZATION": 28962,
+"DonaldTrump / PERSON": 27477,
+"NewYork / GPE": 25263,
+"Chinese / GPE": 24996,
+"Globe / ORGANIZATION": 24954,
+"Mail / PERSON": 23939,
+"Trump / GPE": 23750,
+"BusinessInsider / ORGANIZATION": 23298,
+"WSJ / ORGANIZATION": 23122,
+"Irish / GPE": 22612,
+"Ireland / GPE": 22520,
+"CBSNews / ORGANIZATION": 22408,
+"Reuters / ORGANIZATION": 21283,
+"Italy / GPE": 21232,
+```
+
+The NER found a lot of names related to the newspapers titles that could be omitted from the list.
 
 
-# Conclusions
+# How to run the code
+The code expects as input pre-cleaned files following the Step 0 steps in a folder specified in `RESOURCE_PATH` variable for the `extractor.py` file and `DIRS_BASE_PATH` for the `english.py` file.
+
+After this pre-configuration the code can be launched executing the script `RUN_FULL_PIPELINE.py` that executes the steps from 1 to 5.
+
+**Sometimes the complete script can fail especially after the last call of ner.py file. If this happens the file contains the name of the scripts to be launched in the correct order**
+
+The results of the various scripts are saved in the `./data` folder as described in the steps.

@@ -242,15 +242,744 @@
 <p>Doing like this I found 2 problems:</p>
 <ul>
 <li>Tokens that are in a set and not in the other crash the script because the value is not found in the dictionary. To solve this problem for tokens that don't have a probability value I use the lowest probability for that tokens set.</li>
-<li>Using the multiplications of probabilities we can incurr in numerical underflow: being the values very small and multuplyng them by each other with large inputs the result is a very small number and it can get unstable. To fix this I used the sum of the logs of the probabilities instead of the multiplication of them. This fixes the small number problem and gives more reasonable classification scores.<pre><code class="language-r"><div>P(yi | x1, x2, …, xn) = <span class="hljs-built_in">log</span>(P(x1|y1)) + <span class="hljs-built_in">log</span>(P(x2|y1)) + … <span class="hljs-built_in">log</span>(P(xn|y1))+ <span class="hljs-built_in">log</span>(P(yi))
-</div></code></pre>
-</li>
+<li>Using the multiplications of probabilities we can incurr in numerical underflow: being the values very small and multuplyng them by each other with large inputs the result is a very small number and it can get unstable. To fix this I used the sum of the logs of the probabilities instead of the multiplication of them. This fixes the small number problem and gives more reasonable classification scores.</li>
 </ul>
+<pre><code class="language-r"><div>P(yi | x1, x2, …, xn) = <span class="hljs-built_in">log</span>(P(x1|y1)) + <span class="hljs-built_in">log</span>(P(x2|y1)) + … <span class="hljs-built_in">log</span>(P(xn|y1))+ <span class="hljs-built_in">log</span>(P(yi))
+</div></code></pre>
 <p>To get the prior probabilities I used the provided flag <em>is_covid</em>.</p>
 <p>The result of the classification is stored in <code>./data/classification_results</code> for each outlet in json format. The class is of every news is found in the field <em>class</em> and can be <em>IS COVID</em> or <em>NOT COVID</em>. Is also possible to see the calculated score for each news for both classes.</p>
+<p>It's important to note the Naive Bayes classifier doesn't take care of the postion of the words and their relations because we provide the data as a bag of words but it's an algorithm that has low variance also having high bias, that means that works well in classification despite this.</p>
 <h2 id="step-4--classification-accuracy-verification">Step 4 : Classification Accuracy Verification</h2>
+<p>After the classification we need to verify how correct is the classification, to do so I used two formal ways to calculate correctness using <code>accuracy.py</code>:</p>
+<ul>
+<li>
+<p><strong>Accuracy</strong> : tells us how many input have been classified correctly with the following formula: <img src="file:////home/luca/PycharmProjects/TextMiningProject/venv/report_pics/accuracy.png" alt="accuracy formula"></p>
+<p>This gives us a general view of the correctness of the classification because is not efficient in class-imbalanced data set.</p>
+<p>The accuracy calculated by the script using the flag <em>is_covid</em> from the source is of <strong>0.95</strong></p>
+</li>
+<li>
+<p><strong>Precision / Recall</strong> : this method gives us better insight because tells us:</p>
+<ul>
+<li>
+<p><strong>Precision</strong> : which proportion of the TRUE set is correct (i.e. it's high if the model produces few false positives) <img src="file:////home/luca/PycharmProjects/TextMiningProject/venv/report_pics/precision.png" alt="precision"></p>
+<p>The precision calculated by the script using the flag <em>is_covid</em> from the source is of <strong>0.73</strong></p>
+</li>
+<li>
+<p><strong>Recall</strong> : which proportion of the &quot;real&quot; positives has been correctly classified. (i.e. it's high if the model produces few false negatives) <img src="file:////home/luca/PycharmProjects/TextMiningProject/venv/report_pics/recall.png" alt="recall"></p>
+<p>The precision calculated by the script using the flag <em>is_covid</em> from the source is of <strong>0.95</strong></p>
+</li>
+</ul>
+<p>From the results (saved in <code>./data/accuracy_results.json</code>) we can see that the classifier tends to be more oriented in classyfing articles to be about covid because of the not sho how precision. But if an article is about covid the model classifyes it correctly 95% of the times.</p>
+</li>
+</ul>
 <h2 id="step-5--analysis">Step 5 : Analysis</h2>
-<h1 id="conclusions">Conclusions</h1>
+<p>Now that we have the classified data we can execute data analysis on it for this project we are going to:</p>
+<ul>
+<li>
+<p>Getting proportions of:</p>
+<ul>
+<li>How many COVID-19 news have been issued as proportion of all articles in 2020</li>
+<li>How many COVID-19 news have been issued as proportion of all articles in each month of 2020</li>
+<li>How many COVID-19 news have been issued as proportion of articles in an outlet (e.g. CNN) in 2020</li>
+</ul>
+</li>
+<li>
+<p>Getting the most commonly mentioned Named Entities in COVID-19 news doing Named Entity Recognition (NER)</p>
+</li>
+</ul>
+<h3 id="proportions">Proportions</h3>
+<p>The script the reads the classyfied data and returns the proportions is the <code>filters.py</code> file and saved as json files in <code>./data/analysis</code></p>
+<h3 id="how-many-covid-19-news-have-been-issued-as-proportion-of-all-articles-in-2020">How many COVID-19 news have been issued as proportion of all articles in 2020?</h3>
+<table>
+<thead>
+<tr>
+<th>total_2020</th>
+<th>covid_2020</th>
+<th>percentage_2020</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4249012</td>
+<td>1407326</td>
+<td>33.12%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-many-covid-19-news-have-been-issued-as-proportion-of-all-articles-in-each-month-of-2020">How many COVID-19 news have been issued as proportion of all articles in each month of 2020?</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">month</th>
+<th style="text-align:left">total</th>
+<th style="text-align:left">covid</th>
+<th style="text-align:left">percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">440797</td>
+<td style="text-align:left">37223</td>
+<td style="text-align:left">8.44</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">420264</td>
+<td style="text-align:left">59917</td>
+<td style="text-align:left">14.25</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">473143</td>
+<td style="text-align:left">236532</td>
+<td style="text-align:left">49.99</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">461819</td>
+<td style="text-align:left">271744</td>
+<td style="text-align:left">58.84</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left">469991</td>
+<td style="text-align:left">220139</td>
+<td style="text-align:left">46.83</td>
+</tr>
+<tr>
+<td style="text-align:left">6</td>
+<td style="text-align:left">467633</td>
+<td style="text-align:left">146521</td>
+<td style="text-align:left">31.33</td>
+</tr>
+<tr>
+<td style="text-align:left">7</td>
+<td style="text-align:left">469513</td>
+<td style="text-align:left">146564</td>
+<td style="text-align:left">31.21</td>
+</tr>
+<tr>
+<td style="text-align:left">8</td>
+<td style="text-align:left">435350</td>
+<td style="text-align:left">123191</td>
+<td style="text-align:left">28.29</td>
+</tr>
+<tr>
+<td style="text-align:left">9</td>
+<td style="text-align:left">403165</td>
+<td style="text-align:left">103845</td>
+<td style="text-align:left">25.75</td>
+</tr>
+<tr>
+<td style="text-align:left">10</td>
+<td style="text-align:left">205976</td>
+<td style="text-align:left">61303</td>
+<td style="text-align:left">29.76</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-many-covid-19-news-have-been-issued-as-proportion-of-articles-in-an-outlet-eg-cnn-in-2020">How many COVID-19 news have been issued as proportion of articles in an outlet (e.g. CNN) in 2020?</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">outlet</th>
+<th style="text-align:left">total</th>
+<th style="text-align:left">covid</th>
+<th style="text-align:left">percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><a href="http://9news.com.au">9news.com.au</a></td>
+<td style="text-align:left">41826</td>
+<td style="text-align:left">10410</td>
+<td style="text-align:left">24.888825132692585</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://abc.net.au">abc.net.au</a></td>
+<td style="text-align:left">103835</td>
+<td style="text-align:left">21978</td>
+<td style="text-align:left">21.166273414551934</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://abcnews.go.com">abcnews.go.com</a></td>
+<td style="text-align:left">113842</td>
+<td style="text-align:left">19036</td>
+<td style="text-align:left">16.721420916709125</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://afr.com">afr.com</a></td>
+<td style="text-align:left">105897</td>
+<td style="text-align:left">16525</td>
+<td style="text-align:left">15.604785782411211</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://aljazeera.com">aljazeera.com</a></td>
+<td style="text-align:left">65290</td>
+<td style="text-align:left">11458</td>
+<td style="text-align:left">17.549395006892325</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://apnews.com">apnews.com</a></td>
+<td style="text-align:left">158115</td>
+<td style="text-align:left">20946</td>
+<td style="text-align:left">13.247319988615882</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://bbc.com">bbc.com</a></td>
+<td style="text-align:left">117145</td>
+<td style="text-align:left">17224</td>
+<td style="text-align:left">14.703145674164498</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://bostonglobe.com">bostonglobe.com</a></td>
+<td style="text-align:left">116534</td>
+<td style="text-align:left">18877</td>
+<td style="text-align:left">16.198705957059744</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://breakingnews.ie">breakingnews.ie</a></td>
+<td style="text-align:left">13089</td>
+<td style="text-align:left">890</td>
+<td style="text-align:left">6.799602719841088</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://breitbart.com">breitbart.com</a></td>
+<td style="text-align:left">145339</td>
+<td style="text-align:left">22448</td>
+<td style="text-align:left">15.445269335828648</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://businessinsider.com">businessinsider.com</a></td>
+<td style="text-align:left">118619</td>
+<td style="text-align:left">25666</td>
+<td style="text-align:left">21.637343090061457</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://cbc.ca">cbc.ca</a></td>
+<td style="text-align:left">45757</td>
+<td style="text-align:left">7228</td>
+<td style="text-align:left">15.796490154511877</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://cbsnews.com">cbsnews.com</a></td>
+<td style="text-align:left">116566</td>
+<td style="text-align:left">21337</td>
+<td style="text-align:left">18.30465144210147</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://channel4.com">channel4.com</a></td>
+<td style="text-align:left">7175</td>
+<td style="text-align:left">1673</td>
+<td style="text-align:left">23.317073170731707</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://chicagotribune.com">chicagotribune.com</a></td>
+<td style="text-align:left">107117</td>
+<td style="text-align:left">13425</td>
+<td style="text-align:left">12.533024636612302</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://cnbc.com">cnbc.com</a></td>
+<td style="text-align:left">110345</td>
+<td style="text-align:left">28890</td>
+<td style="text-align:left">26.181521591372512</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://csmonitor.com">csmonitor.com</a></td>
+<td style="text-align:left">30797</td>
+<td style="text-align:left">4606</td>
+<td style="text-align:left">14.956002208007273</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://ctvnews.ca">ctvnews.ca</a></td>
+<td style="text-align:left">74349</td>
+<td style="text-align:left">18693</td>
+<td style="text-align:left">25.142234596295847</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://dailymail.co.uk">dailymail.co.uk</a></td>
+<td style="text-align:left">608931</td>
+<td style="text-align:left">44763</td>
+<td style="text-align:left">7.3510791863117495</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://dailystar.co.uk">dailystar.co.uk</a></td>
+<td style="text-align:left">186203</td>
+<td style="text-align:left">8846</td>
+<td style="text-align:left">4.750729043033679</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://dw.com">dw.com</a></td>
+<td style="text-align:left">65231</td>
+<td style="text-align:left">12850</td>
+<td style="text-align:left">19.699222762183624</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://economist.com">economist.com</a></td>
+<td style="text-align:left">26007</td>
+<td style="text-align:left">3942</td>
+<td style="text-align:left">15.157457607567194</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://edition.cnn.com">edition.cnn.com</a></td>
+<td style="text-align:left">68227</td>
+<td style="text-align:left">11652</td>
+<td style="text-align:left">17.07828279127032</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://euronews.com">euronews.com</a></td>
+<td style="text-align:left">89274</td>
+<td style="text-align:left">12762</td>
+<td style="text-align:left">14.295315545399557</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://express.co.uk">express.co.uk</a></td>
+<td style="text-align:left">247580</td>
+<td style="text-align:left">37685</td>
+<td style="text-align:left">15.221342596332498</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://foxnews.com">foxnews.com</a></td>
+<td style="text-align:left">223856</td>
+<td style="text-align:left">31809</td>
+<td style="text-align:left">14.209581159316704</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://france24.com">france24.com</a></td>
+<td style="text-align:left">51711</td>
+<td style="text-align:left">10215</td>
+<td style="text-align:left">19.754017520450194</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://globalnews.ca">globalnews.ca</a></td>
+<td style="text-align:left">83252</td>
+<td style="text-align:left">22147</td>
+<td style="text-align:left">26.6023639071734</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://huffpost.com">huffpost.com</a></td>
+<td style="text-align:left">72479</td>
+<td style="text-align:left">13583</td>
+<td style="text-align:left">18.740600725727454</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://independent.co.uk">independent.co.uk</a></td>
+<td style="text-align:left">95415</td>
+<td style="text-align:left">12939</td>
+<td style="text-align:left">13.560760886653043</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://independent.ie">independent.ie</a></td>
+<td style="text-align:left">104749</td>
+<td style="text-align:left">8436</td>
+<td style="text-align:left">8.053537503937985</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://inquirer.com">inquirer.com</a></td>
+<td style="text-align:left">62919</td>
+<td style="text-align:left">12987</td>
+<td style="text-align:left">20.640823916464026</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://irishexaminer.com">irishexaminer.com</a></td>
+<td style="text-align:left">52872</td>
+<td style="text-align:left">6027</td>
+<td style="text-align:left">11.399228325011348</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://irishmirror.ie">irishmirror.ie</a></td>
+<td style="text-align:left">21271</td>
+<td style="text-align:left">1494</td>
+<td style="text-align:left">7.023647219218654</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://irishtimes.com">irishtimes.com</a></td>
+<td style="text-align:left">98651</td>
+<td style="text-align:left">14930</td>
+<td style="text-align:left">15.134159815916716</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://itv.com">itv.com</a></td>
+<td style="text-align:left">28321</td>
+<td style="text-align:left">5476</td>
+<td style="text-align:left">19.335475442251333</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://latimes.com">latimes.com</a></td>
+<td style="text-align:left">137335</td>
+<td style="text-align:left">24979</td>
+<td style="text-align:left">18.18837150034587</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://liverpoolecho.co.uk">liverpoolecho.co.uk</a></td>
+<td style="text-align:left">80657</td>
+<td style="text-align:left">11474</td>
+<td style="text-align:left">14.225671671398638</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://macleans.ca">macleans.ca</a></td>
+<td style="text-align:left">14993</td>
+<td style="text-align:left">3888</td>
+<td style="text-align:left">25.93210164743547</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://metro.co.uk">metro.co.uk</a></td>
+<td style="text-align:left">117775</td>
+<td style="text-align:left">12794</td>
+<td style="text-align:left">10.863086393547018</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://mirror.co.uk">mirror.co.uk</a></td>
+<td style="text-align:left">277786</td>
+<td style="text-align:left">23103</td>
+<td style="text-align:left">8.316833821718877</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://montrealgazette.com">montrealgazette.com</a></td>
+<td style="text-align:left">52976</td>
+<td style="text-align:left">2857</td>
+<td style="text-align:left">5.393008154636061</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://morningstaronline.co.uk">morningstaronline.co.uk</a></td>
+<td style="text-align:left">15395</td>
+<td style="text-align:left">1637</td>
+<td style="text-align:left">10.633322507307568</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://msnbc.com">msnbc.com</a></td>
+<td style="text-align:left">74369</td>
+<td style="text-align:left">17599</td>
+<td style="text-align:left">23.664430071669646</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://nbcnews.com">nbcnews.com</a></td>
+<td style="text-align:left">98405</td>
+<td style="text-align:left">20243</td>
+<td style="text-align:left">20.57110919160612</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://news.com.au">news.com.au</a></td>
+<td style="text-align:left">106349</td>
+<td style="text-align:left">16531</td>
+<td style="text-align:left">15.54410478706899</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://news.sky.com">news.sky.com</a></td>
+<td style="text-align:left">63026</td>
+<td style="text-align:left">16221</td>
+<td style="text-align:left">25.736997429632215</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://news.yahoo.com">news.yahoo.com</a></td>
+<td style="text-align:left">285447</td>
+<td style="text-align:left">54633</td>
+<td style="text-align:left">19.139454960115188</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://newshub.co.nz">newshub.co.nz</a></td>
+<td style="text-align:left">56246</td>
+<td style="text-align:left">13216</td>
+<td style="text-align:left">23.496781993386197</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://newsweek.com">newsweek.com</a></td>
+<td style="text-align:left">104713</td>
+<td style="text-align:left">15537</td>
+<td style="text-align:left">14.837699235052</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://npr.org">npr.org</a></td>
+<td style="text-align:left">40125</td>
+<td style="text-align:left">9035</td>
+<td style="text-align:left">22.517133956386292</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://nypost.com">nypost.com</a></td>
+<td style="text-align:left">124737</td>
+<td style="text-align:left">16872</td>
+<td style="text-align:left">13.526058827773635</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://nytimes.com">nytimes.com</a></td>
+<td style="text-align:left">56931</td>
+<td style="text-align:left">14589</td>
+<td style="text-align:left">25.62575749591611</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://nzherald.co.nz">nzherald.co.nz</a></td>
+<td style="text-align:left">131757</td>
+<td style="text-align:left">19697</td>
+<td style="text-align:left">14.949490349658841</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://politico.com">politico.com</a></td>
+<td style="text-align:left">92790</td>
+<td style="text-align:left">14583</td>
+<td style="text-align:left">15.716133204009052</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://rcinet.ca">rcinet.ca</a></td>
+<td style="text-align:left">17250</td>
+<td style="text-align:left">3295</td>
+<td style="text-align:left">19.10144927536232</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://reuters.com">reuters.com</a></td>
+<td style="text-align:left">168841</td>
+<td style="text-align:left">42059</td>
+<td style="text-align:left">24.910418677927755</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://rfi.fr">rfi.fr</a></td>
+<td style="text-align:left">19179</td>
+<td style="text-align:left">7779</td>
+<td style="text-align:left">40.559987486313155</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://rnz.co.nz">rnz.co.nz</a></td>
+<td style="text-align:left">32156</td>
+<td style="text-align:left">8992</td>
+<td style="text-align:left">27.963677074262968</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://rt.com">rt.com</a></td>
+<td style="text-align:left">65232</td>
+<td style="text-align:left">10037</td>
+<td style="text-align:left">15.386620063772382</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://rte.ie">rte.ie</a></td>
+<td style="text-align:left">19888</td>
+<td style="text-align:left">4072</td>
+<td style="text-align:left">20.474658085277554</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://sbs.com.au">sbs.com.au</a></td>
+<td style="text-align:left">38595</td>
+<td style="text-align:left">8372</td>
+<td style="text-align:left">21.691929006347973</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://scoop.co.nz">scoop.co.nz</a></td>
+<td style="text-align:left">139235</td>
+<td style="text-align:left">15549</td>
+<td style="text-align:left">11.167450712823644</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://scotsman.com">scotsman.com</a></td>
+<td style="text-align:left">37910</td>
+<td style="text-align:left">5305</td>
+<td style="text-align:left">13.99366921656555</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://slate.com">slate.com</a></td>
+<td style="text-align:left">47229</td>
+<td style="text-align:left">5589</td>
+<td style="text-align:left">11.833830908975418</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://smh.com.au">smh.com.au</a></td>
+<td style="text-align:left">139672</td>
+<td style="text-align:left">17625</td>
+<td style="text-align:left">12.618849876854345</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://standard.co.uk">standard.co.uk</a></td>
+<td style="text-align:left">116295</td>
+<td style="text-align:left">13015</td>
+<td style="text-align:left">11.191366782750762</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://stuff.co.nz">stuff.co.nz</a></td>
+<td style="text-align:left">153814</td>
+<td style="text-align:left">20955</td>
+<td style="text-align:left">13.623597331842355</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://telegraph.co.uk">telegraph.co.uk</a></td>
+<td style="text-align:left">198279</td>
+<td style="text-align:left">23807</td>
+<td style="text-align:left">12.006818674695756</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://theage.com.au">theage.com.au</a></td>
+<td style="text-align:left">124252</td>
+<td style="text-align:left">18327</td>
+<td style="text-align:left">14.74986318127676</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://theatlantic.com">theatlantic.com</a></td>
+<td style="text-align:left">60181</td>
+<td style="text-align:left">6612</td>
+<td style="text-align:left">10.98685631677772</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://theglobeandmail.com">theglobeandmail.com</a></td>
+<td style="text-align:left">139550</td>
+<td style="text-align:left">23619</td>
+<td style="text-align:left">16.92511644571838</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://theguardian.com">theguardian.com</a></td>
+<td style="text-align:left">176381</td>
+<td style="text-align:left">29780</td>
+<td style="text-align:left">16.883904728967405</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://thehill.com">thehill.com</a></td>
+<td style="text-align:left">96405</td>
+<td style="text-align:left">19995</td>
+<td style="text-align:left">20.740625486229966</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://thejournal.ie">thejournal.ie</a></td>
+<td style="text-align:left">62828</td>
+<td style="text-align:left">7621</td>
+<td style="text-align:left">12.129942064047876</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://thestar.com">thestar.com</a></td>
+<td style="text-align:left">53139</td>
+<td style="text-align:left">5633</td>
+<td style="text-align:left">10.60050057396639</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://thesun.co.uk">thesun.co.uk</a></td>
+<td style="text-align:left">330374</td>
+<td style="text-align:left">33992</td>
+<td style="text-align:left">10.288945255982613</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://thesun.ie">thesun.ie</a></td>
+<td style="text-align:left">194499</td>
+<td style="text-align:left">19842</td>
+<td style="text-align:left">10.201594866811655</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://thetimes.co.uk">thetimes.co.uk</a></td>
+<td style="text-align:left">279829</td>
+<td style="text-align:left">32993</td>
+<td style="text-align:left">11.790414860504093</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://thewest.com.au">thewest.com.au</a></td>
+<td style="text-align:left">86792</td>
+<td style="text-align:left">12005</td>
+<td style="text-align:left">13.831919992626048</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://time.com">time.com</a></td>
+<td style="text-align:left">61556</td>
+<td style="text-align:left">9851</td>
+<td style="text-align:left">16.003314055494183</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://torontosun.com">torontosun.com</a></td>
+<td style="text-align:left">66162</td>
+<td style="text-align:left">7268</td>
+<td style="text-align:left">10.985157643360237</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://upi.com">upi.com</a></td>
+<td style="text-align:left">72692</td>
+<td style="text-align:left">9546</td>
+<td style="text-align:left">13.13211907775271</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://usatoday.com">usatoday.com</a></td>
+<td style="text-align:left">139840</td>
+<td style="text-align:left">22940</td>
+<td style="text-align:left">16.40446224256293</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://vancouversun.com">vancouversun.com</a></td>
+<td style="text-align:left">50976</td>
+<td style="text-align:left">2117</td>
+<td style="text-align:left">4.152934714375393</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://walesonline.co.uk">walesonline.co.uk</a></td>
+<td style="text-align:left">94705</td>
+<td style="text-align:left">12933</td>
+<td style="text-align:left">13.65608996357109</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://washingtonpost.com">washingtonpost.com</a></td>
+<td style="text-align:left">189905</td>
+<td style="text-align:left">28805</td>
+<td style="text-align:left">15.168110370974961</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://washingtontimes.com">washingtontimes.com</a></td>
+<td style="text-align:left">94438</td>
+<td style="text-align:left">13882</td>
+<td style="text-align:left">14.699591266227579</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://westernjournal.com">westernjournal.com</a></td>
+<td style="text-align:left">43038</td>
+<td style="text-align:left">5225</td>
+<td style="text-align:left">12.140434035038803</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://wnd.com">wnd.com</a></td>
+<td style="text-align:left">75712</td>
+<td style="text-align:left">8899</td>
+<td style="text-align:left">11.753751056635672</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="http://wsj.com">wsj.com</a></td>
+<td style="text-align:left">122570</td>
+<td style="text-align:left">25730</td>
+<td style="text-align:left">20.99208615485029</td>
+</tr>
+</tbody>
+</table>
+<h2 id="named-entity-recognition-ner">Named Entity Recognition (NER)</h2>
+<p>The goal of NER is to find the most commong entities in a text using corpora to distinguish words that refers to some entity.</p>
+<p>I used NLTK ne_chunk and pos_tag in the <code>ner.py</code> script to extract the most common entities of covid related news.</p>
+<p>Before using NLTK's NER I tryed with the Stanford one but it was extremely slow for the data size.</p>
+<p>The NLTK NER pipeline requires to provide to the ne_chunk function pos-tagged text.</p>
+<p>The NLTK module for NERing the text is based on a supervised machine learning model named MaxEnt classifier. This algorithm uses a manually annotated corpus specifically for Entity Recognition.</p>
+<p>For the training of the model have been provided various features as: the POS tag, if the words starts with capital letter, if the word is a lemma, the pos tag of the previous and next word.</p>
+<p>The result of the execution of the script is saved in <code>ner_total.py</code>.</p>
+<p>Here the most common Entities found by the script:</p>
+<pre><code class="language-json"><div><span class="hljs-string">&quot;Coronavirus / GPE&quot;</span>: <span class="hljs-number">207047</span>,
+<span class="hljs-string">&quot;Trump / PERSON&quot;</span>: <span class="hljs-number">86396</span>,
+<span class="hljs-string">&quot;China / GPE&quot;</span>: <span class="hljs-number">80622</span>,
+<span class="hljs-string">&quot;U.S. / GPE&quot;</span>: <span class="hljs-number">75092</span>,
+<span class="hljs-string">&quot;UK / ORGANIZATION&quot;</span>: <span class="hljs-number">48854</span>,
+<span class="hljs-string">&quot;ABCNews / ORGANIZATION&quot;</span>: <span class="hljs-number">40700</span>,
+<span class="hljs-string">&quot;DailyMailOnline / PERSON&quot;</span>: <span class="hljs-number">40337</span>,
+<span class="hljs-string">&quot;Australia / GPE&quot;</span>: <span class="hljs-number">38269</span>,
+<span class="hljs-string">&quot;FoxNews / PERSON&quot;</span>: <span class="hljs-number">33981</span>,
+<span class="hljs-string">&quot;Guardian / GPE&quot;</span>: <span class="hljs-number">31284</span>,
+<span class="hljs-string">&quot;US / GSP&quot;</span>: <span class="hljs-number">30735</span>,
+<span class="hljs-string">&quot;LosAngeles / GPE&quot;</span>: <span class="hljs-number">29122</span>,
+<span class="hljs-string">&quot;WashingtonPost / ORGANIZATION&quot;</span>: <span class="hljs-number">28962</span>,
+<span class="hljs-string">&quot;DonaldTrump / PERSON&quot;</span>: <span class="hljs-number">27477</span>,
+<span class="hljs-string">&quot;NewYork / GPE&quot;</span>: <span class="hljs-number">25263</span>,
+<span class="hljs-string">&quot;Chinese / GPE&quot;</span>: <span class="hljs-number">24996</span>,
+<span class="hljs-string">&quot;Globe / ORGANIZATION&quot;</span>: <span class="hljs-number">24954</span>,
+<span class="hljs-string">&quot;Mail / PERSON&quot;</span>: <span class="hljs-number">23939</span>,
+<span class="hljs-string">&quot;Trump / GPE&quot;</span>: <span class="hljs-number">23750</span>,
+<span class="hljs-string">&quot;BusinessInsider / ORGANIZATION&quot;</span>: <span class="hljs-number">23298</span>,
+<span class="hljs-string">&quot;WSJ / ORGANIZATION&quot;</span>: <span class="hljs-number">23122</span>,
+<span class="hljs-string">&quot;Irish / GPE&quot;</span>: <span class="hljs-number">22612</span>,
+<span class="hljs-string">&quot;Ireland / GPE&quot;</span>: <span class="hljs-number">22520</span>,
+<span class="hljs-string">&quot;CBSNews / ORGANIZATION&quot;</span>: <span class="hljs-number">22408</span>,
+<span class="hljs-string">&quot;Reuters / ORGANIZATION&quot;</span>: <span class="hljs-number">21283</span>,
+<span class="hljs-string">&quot;Italy / GPE&quot;</span>: <span class="hljs-number">21232</span>,
+</div></code></pre>
+<p>The NER found a lot of names related to the newspapers titles that could be omitted from the list.</p>
+<h1 id="how-to-run-the-code">How to run the code</h1>
+<p>The code expects as input pre-cleaned files following the Step 0 steps in a folder specified in <code>RESOURCE_PATH</code> variable for the <code>extractor.py</code> file and <code>DIRS_BASE_PATH</code> for the <code>english.py</code> file.</p>
+<p>After this pre-configuration the code can be launched executing the script <code>RUN_FULL_PIPELINE.py</code> that executes the steps from 1 to 5.</p>
+<p><strong>Sometimes the complete script can fail especially after the last call of <a href="http://ner.py">ner.py</a> file. If this happens the file contains the name of the scripts to be launched in the correct order</strong></p>
+<p>The results of the various scripts are saved in the <code>./data</code> folder as described in the steps.</p>
 
         
         <script async type="text/javascript">
