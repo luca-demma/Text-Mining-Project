@@ -74,4 +74,5 @@ def classify(outlet):
 	write_json_to_file(outlet_file, "classification_results/" + outlet)
 
 
+# multiprocessing
 pqdm(OUTLETS, classify, n_jobs=NUM_CORES)

@@ -223,12 +223,163 @@ The most 20 common words for NON covid news:
 ```
 
 ### Classification
+Now that we have the tokens probabilities for the TRUE and the FALSE sets we can use them to calculate the probability of each token set being part of one of the two sets by multiplying the probabilities for each token and multiplying by prior probability and see which classification gives us a higher score. The script that handles this is `classifier.py`.
 
+Doing like this I found 2 problems:
+-   Tokens that are in a set and not in the other crash the script because the value is not found in the dictionary. To solve this problem for tokens that don't have a probability value I use the lowest probability for that tokens set.
+-   Using the multiplications of probabilities we can incurr in numerical underflow: being the values very small and multuplyng them by each other with large inputs the result is a very small number and it can get unstable. To fix this I used the sum of the logs of the probabilities instead of the multiplication of them. This fixes the small number problem and gives more reasonable classification scores.
+    ```r   
+    P(yi | x1, x2, …, xn) = log(P(x1|y1)) + log(P(x2|y1)) + … log(P(xn|y1))+ log(P(yi))
+    ```
 
+To get the prior probabilities I used the provided flag *is_covid*.
+
+The result of the classification is stored in `./data/classification_results` for each outlet in json format. The class is of every news is found in the field *class* and can be *IS COVID* or *NOT COVID*. Is also possible to see the calculated score for each news for both classes.
 
 
 ## Step 4 : Classification Accuracy Verification
+After the classification we need to verify how correct is the classification, to do so I used two formal ways to calculate correctness using `accuracy.py`:
+-   **Accuracy** : tells us how many input have been classified correctly with the following formula: ![accuracy formula](./report_pics/accuracy.png)
+
+    This gives us a general view of the correctness of the classification because is not efficient in class-imbalanced data set.
+
+    The accuracy calculated by the script using the flag *is_covid* from the source is of **0.95**
+-   **Precision / Recall** : this method gives us better insight because tells us:
+    - **Precision** : which proportion of the TRUE set is correct (i.e. it's high if the model produces few false positives) ![precision](./report_pics/precision.png)
+  
+        The precision calculated by the script using the flag *is_covid* from the source is of **0.73**
+    - **Recall** : which proportion of the "real" positives has been correctly classified. (i.e. it's high if the model produces few false negatives) ![recall](./report_pics/recall.png)
+  
+        The precision calculated by the script using the flag *is_covid* from the source is of **0.95**
+
+    From the results (saved in `./data/accuracy_results.json`) we can see that the classifier tends to be more oriented in classyfing articles to be about covid because of the not sho how precision. But if an article is about covid the model classifyes it correctly 95% of the times.
 
 ## Step 5 : Analysis
+Now that we have the classified data we can execute data analysis on it for this project we are going to:
+- Getting proportions of:
+    - How many COVID-19 news have been issued as proportion of all articles in 2020
+    - How many COVID-19 news have been issued as proportion of all articles in each month of 2020
+    - How many COVID-19 news have been issued as proportion of articles in an outlet (e.g. CNN) in 2020
+
+-   Getting the most commonly mentioned Named Entities in COVID-19 news doing Named Entity Recognition (NER)
+
+### Proportions
+The script the reads the classyfied data and returns the proportions is the `filters.py` file and saved as json files in `./data/analysis`
+
+### How many COVID-19 news have been issued as proportion of all articles in 2020?
+| total_2020 | covid_2020 | percentage_2020 |
+| ---------- | ---------- | --------------- |
+| 4249012    | 1407326    | 33.12%          |
+
+### How many COVID-19 news have been issued as proportion of all articles in each month of 2020?
+| month | total  | covid  | percentage |
+| :---- | :----- | :----- | :--------- |
+| 1     | 440797 | 37223  | 8.44       |
+| 2     | 420264 | 59917  | 14.25      |
+| 3     | 473143 | 236532 | 49.99      |
+| 4     | 461819 | 271744 | 58.84      |
+| 5     | 469991 | 220139 | 46.83      |
+| 6     | 467633 | 146521 | 31.33      |
+| 7     | 469513 | 146564 | 31.21      |
+| 8     | 435350 | 123191 | 28.29      |
+| 9     | 403165 | 103845 | 25.75      |
+| 10    | 205976 | 61303  | 29.76      |
+
+### How many COVID-19 news have been issued as proportion of articles in an outlet (e.g. CNN) in 2020?
+| outlet                  | total  | covid | percentage         |
+| :---------------------- | :----- | :---- | :----------------- |
+| 9news.com.au            | 41826  | 10410 | 24.888825132692585 |
+| abc.net.au              | 103835 | 21978 | 21.166273414551934 |
+| abcnews.go.com          | 113842 | 19036 | 16.721420916709125 |
+| afr.com                 | 105897 | 16525 | 15.604785782411211 |
+| aljazeera.com           | 65290  | 11458 | 17.549395006892325 |
+| apnews.com              | 158115 | 20946 | 13.247319988615882 |
+| bbc.com                 | 117145 | 17224 | 14.703145674164498 |
+| bostonglobe.com         | 116534 | 18877 | 16.198705957059744 |
+| breakingnews.ie         | 13089  | 890   | 6.799602719841088  |
+| breitbart.com           | 145339 | 22448 | 15.445269335828648 |
+| businessinsider.com     | 118619 | 25666 | 21.637343090061457 |
+| cbc.ca                  | 45757  | 7228  | 15.796490154511877 |
+| cbsnews.com             | 116566 | 21337 | 18.30465144210147  |
+| channel4.com            | 7175   | 1673  | 23.317073170731707 |
+| chicagotribune.com      | 107117 | 13425 | 12.533024636612302 |
+| cnbc.com                | 110345 | 28890 | 26.181521591372512 |
+| csmonitor.com           | 30797  | 4606  | 14.956002208007273 |
+| ctvnews.ca              | 74349  | 18693 | 25.142234596295847 |
+| dailymail.co.uk         | 608931 | 44763 | 7.3510791863117495 |
+| dailystar.co.uk         | 186203 | 8846  | 4.750729043033679  |
+| dw.com                  | 65231  | 12850 | 19.699222762183624 |
+| economist.com           | 26007  | 3942  | 15.157457607567194 |
+| edition.cnn.com         | 68227  | 11652 | 17.07828279127032  |
+| euronews.com            | 89274  | 12762 | 14.295315545399557 |
+| express.co.uk           | 247580 | 37685 | 15.221342596332498 |
+| foxnews.com             | 223856 | 31809 | 14.209581159316704 |
+| france24.com            | 51711  | 10215 | 19.754017520450194 |
+| globalnews.ca           | 83252  | 22147 | 26.6023639071734   |
+| huffpost.com            | 72479  | 13583 | 18.740600725727454 |
+| independent.co.uk       | 95415  | 12939 | 13.560760886653043 |
+| independent.ie          | 104749 | 8436  | 8.053537503937985  |
+| inquirer.com            | 62919  | 12987 | 20.640823916464026 |
+| irishexaminer.com       | 52872  | 6027  | 11.399228325011348 |
+| irishmirror.ie          | 21271  | 1494  | 7.023647219218654  |
+| irishtimes.com          | 98651  | 14930 | 15.134159815916716 |
+| itv.com                 | 28321  | 5476  | 19.335475442251333 |
+| latimes.com             | 137335 | 24979 | 18.18837150034587  |
+| liverpoolecho.co.uk     | 80657  | 11474 | 14.225671671398638 |
+| macleans.ca             | 14993  | 3888  | 25.93210164743547  |
+| metro.co.uk             | 117775 | 12794 | 10.863086393547018 |
+| mirror.co.uk            | 277786 | 23103 | 8.316833821718877  |
+| montrealgazette.com     | 52976  | 2857  | 5.393008154636061  |
+| morningstaronline.co.uk | 15395  | 1637  | 10.633322507307568 |
+| msnbc.com               | 74369  | 17599 | 23.664430071669646 |
+| nbcnews.com             | 98405  | 20243 | 20.57110919160612  |
+| news.com.au             | 106349 | 16531 | 15.54410478706899  |
+| news.sky.com            | 63026  | 16221 | 25.736997429632215 |
+| news.yahoo.com          | 285447 | 54633 | 19.139454960115188 |
+| newshub.co.nz           | 56246  | 13216 | 23.496781993386197 |
+| newsweek.com            | 104713 | 15537 | 14.837699235052    |
+| npr.org                 | 40125  | 9035  | 22.517133956386292 |
+| nypost.com              | 124737 | 16872 | 13.526058827773635 |
+| nytimes.com             | 56931  | 14589 | 25.62575749591611  |
+| nzherald.co.nz          | 131757 | 19697 | 14.949490349658841 |
+| politico.com            | 92790  | 14583 | 15.716133204009052 |
+| rcinet.ca               | 17250  | 3295  | 19.10144927536232  |
+| reuters.com             | 168841 | 42059 | 24.910418677927755 |
+| rfi.fr                  | 19179  | 7779  | 40.559987486313155 |
+| rnz.co.nz               | 32156  | 8992  | 27.963677074262968 |
+| rt.com                  | 65232  | 10037 | 15.386620063772382 |
+| rte.ie                  | 19888  | 4072  | 20.474658085277554 |
+| sbs.com.au              | 38595  | 8372  | 21.691929006347973 |
+| scoop.co.nz             | 139235 | 15549 | 11.167450712823644 |
+| scotsman.com            | 37910  | 5305  | 13.99366921656555  |
+| slate.com               | 47229  | 5589  | 11.833830908975418 |
+| smh.com.au              | 139672 | 17625 | 12.618849876854345 |
+| standard.co.uk          | 116295 | 13015 | 11.191366782750762 |
+| stuff.co.nz             | 153814 | 20955 | 13.623597331842355 |
+| telegraph.co.uk         | 198279 | 23807 | 12.006818674695756 |
+| theage.com.au           | 124252 | 18327 | 14.74986318127676  |
+| theatlantic.com         | 60181  | 6612  | 10.98685631677772  |
+| theglobeandmail.com     | 139550 | 23619 | 16.92511644571838  |
+| theguardian.com         | 176381 | 29780 | 16.883904728967405 |
+| thehill.com             | 96405  | 19995 | 20.740625486229966 |
+| thejournal.ie           | 62828  | 7621  | 12.129942064047876 |
+| thestar.com             | 53139  | 5633  | 10.60050057396639  |
+| thesun.co.uk            | 330374 | 33992 | 10.288945255982613 |
+| thesun.ie               | 194499 | 19842 | 10.201594866811655 |
+| thetimes.co.uk          | 279829 | 32993 | 11.790414860504093 |
+| thewest.com.au          | 86792  | 12005 | 13.831919992626048 |
+| time.com                | 61556  | 9851  | 16.003314055494183 |
+| torontosun.com          | 66162  | 7268  | 10.985157643360237 |
+| upi.com                 | 72692  | 9546  | 13.13211907775271  |
+| usatoday.com            | 139840 | 22940 | 16.40446224256293  |
+| vancouversun.com        | 50976  | 2117  | 4.152934714375393  |
+| walesonline.co.uk       | 94705  | 12933 | 13.65608996357109  |
+| washingtonpost.com      | 189905 | 28805 | 15.168110370974961 |
+| washingtontimes.com     | 94438  | 13882 | 14.699591266227579 |
+| westernjournal.com      | 43038  | 5225  | 12.140434035038803 |
+| wnd.com                 | 75712  | 8899  | 11.753751056635672 |
+| wsj.com                 | 122570 | 25730 | 20.99208615485029  |
+
+
 
 # Conclusions

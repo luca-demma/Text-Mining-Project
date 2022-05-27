@@ -82,7 +82,6 @@
 <li><strong>contractions</strong></li>
 </ul>
 <p>Having to deal with huge quantity of data I chose to implement most of the scripts in a multi-process way using the power of the parallelism. This has been possible mainly because the majority of the operations are parallelizable not handling sequetial data. Using this technique permites to speed up the whole process up to 8 times in modern computers with multiple CPUs. To implement multiprocessing I used the Python module <em>pqdm</em>.</p>
-<hr>
 <h1 id="pipeline">Pipeline</h1>
 <p>The following picture describes the pipeline of the processing implemented by the code divided in 6 macro steps:</p>
 <ul>
@@ -131,14 +130,124 @@
 <p>This step is crucial to transform natural language in a structured data source that can be handled by a software.</p>
 <p>In my pipeline I used the following normalization techniques for titles and descriptions in the following order (implementation in <code>normalizer.py</code> file):</p>
 <ul>
-<li><strong>to lower case</strong> : transforming the texts to lower case to make easier matching for the same words with different casing</li>
-<li><strong>expanding contractions</strong> : expanding the english language contractions (e.g. I'm -&gt; I am). I used the the module <a href="https://github.com/kootenpv/contractions">contractions</a></li>
-<li><strong>tokenization</strong> :</li>
-<li><strong>removing punctuations</strong> :</li>
-<li><strong>lemmatization</strong> :</li>
-<li><strong>removing stopwords</strong> :</li>
+<li>
+<p><strong>to lower case</strong> : transforming the texts to lower case to make easier matching for the same words with different casing</p>
+</li>
+<li>
+<p><strong>expanding contractions</strong> : expanding the english language contractions (e.g. I'm -&gt; I am). I used the the module <a href="https://github.com/kootenpv/contractions">contractions</a></p>
+</li>
+<li>
+<p><strong>tokenization</strong> : using <em>nltk.tokenize.word_tokenize</em> that uses the NLTK's reccomended tokenizer to split a sentence in tokens. Internally it uses a series of regular expressions to split the tokens by white spaces and punctuations.</p>
+</li>
+<li>
+<p><strong>removing punctuations</strong> : using Python list comprehensions to remove all the tokens that contain punctuations. For this I'm using the Python built-in function <code>isalnum()</code> that returns true if a string contains only alphanumeric characters, I added a condition to not remove the occurrences of <em>'covid-19'</em>.</p>
+<pre><code class="language-python"><div>[token <span class="hljs-keyword">for</span> token <span class="hljs-keyword">in</span> tokens_list <span class="hljs-keyword">if</span> (token.isalnum() <span class="hljs-keyword">or</span> token == <span class="hljs-string">&quot;covid-19&quot;</span>)]
+</div></code></pre>
+</li>
+<li>
+<p><strong>lemmatization</strong> : using WordNet corpus lemmatizer WordNetLemmatizer to lemmatize the tokens got in the previous step. I choose to lemmatize instead of stemming because stemming is not so efficient due to the fact that tends to stem to unwanted words.</p>
+</li>
+<li>
+<p><strong>removing stopwords</strong> : stop words are commonly used words that occure frenquently and usually don't provide additional information. For doing this I used the NLTK corpus <em>stopwords</em> that contains a list of stopwords in 11 languages.</p>
+<p>This is the list for english <em>(Taken from: <a href="https://www.nltk.org/book/ch02.html">https://www.nltk.org/book/ch02.html</a>)</em>:</p>
+<pre><code class="language-python"><div>[<span class="hljs-string">&#x27;i&#x27;</span>, <span class="hljs-string">&#x27;me&#x27;</span>, <span class="hljs-string">&#x27;my&#x27;</span>, <span class="hljs-string">&#x27;myself&#x27;</span>, <span class="hljs-string">&#x27;we&#x27;</span>, <span class="hljs-string">&#x27;our&#x27;</span>, <span class="hljs-string">&#x27;ours&#x27;</span>, <span class="hljs-string">&#x27;ourselves&#x27;</span>, <span class="hljs-string">&#x27;you&#x27;</span>, <span class="hljs-string">&#x27;your&#x27;</span>, <span class="hljs-string">&#x27;yours&#x27;</span>,
+<span class="hljs-string">&#x27;yourself&#x27;</span>, <span class="hljs-string">&#x27;yourselves&#x27;</span>, <span class="hljs-string">&#x27;he&#x27;</span>, <span class="hljs-string">&#x27;him&#x27;</span>, <span class="hljs-string">&#x27;his&#x27;</span>, <span class="hljs-string">&#x27;himself&#x27;</span>, <span class="hljs-string">&#x27;she&#x27;</span>, <span class="hljs-string">&#x27;her&#x27;</span>, <span class="hljs-string">&#x27;hers&#x27;</span>,
+<span class="hljs-string">&#x27;herself&#x27;</span>, <span class="hljs-string">&#x27;it&#x27;</span>, <span class="hljs-string">&#x27;its&#x27;</span>, <span class="hljs-string">&#x27;itself&#x27;</span>, <span class="hljs-string">&#x27;they&#x27;</span>, <span class="hljs-string">&#x27;them&#x27;</span>, <span class="hljs-string">&#x27;their&#x27;</span>, <span class="hljs-string">&#x27;theirs&#x27;</span>, <span class="hljs-string">&#x27;themselves&#x27;</span>,
+<span class="hljs-string">&#x27;what&#x27;</span>, <span class="hljs-string">&#x27;which&#x27;</span>, <span class="hljs-string">&#x27;who&#x27;</span>, <span class="hljs-string">&#x27;whom&#x27;</span>, <span class="hljs-string">&#x27;this&#x27;</span>, <span class="hljs-string">&#x27;that&#x27;</span>, <span class="hljs-string">&#x27;these&#x27;</span>, <span class="hljs-string">&#x27;those&#x27;</span>, <span class="hljs-string">&#x27;am&#x27;</span>, <span class="hljs-string">&#x27;is&#x27;</span>, <span class="hljs-string">&#x27;are&#x27;</span>,
+<span class="hljs-string">&#x27;was&#x27;</span>, <span class="hljs-string">&#x27;were&#x27;</span>, <span class="hljs-string">&#x27;be&#x27;</span>, <span class="hljs-string">&#x27;been&#x27;</span>, <span class="hljs-string">&#x27;being&#x27;</span>, <span class="hljs-string">&#x27;have&#x27;</span>, <span class="hljs-string">&#x27;has&#x27;</span>, <span class="hljs-string">&#x27;had&#x27;</span>, <span class="hljs-string">&#x27;having&#x27;</span>, <span class="hljs-string">&#x27;do&#x27;</span>, <span class="hljs-string">&#x27;does&#x27;</span>,
+<span class="hljs-string">&#x27;did&#x27;</span>, <span class="hljs-string">&#x27;doing&#x27;</span>, <span class="hljs-string">&#x27;a&#x27;</span>, <span class="hljs-string">&#x27;an&#x27;</span>, <span class="hljs-string">&#x27;the&#x27;</span>, <span class="hljs-string">&#x27;and&#x27;</span>, <span class="hljs-string">&#x27;but&#x27;</span>, <span class="hljs-string">&#x27;if&#x27;</span>, <span class="hljs-string">&#x27;or&#x27;</span>, <span class="hljs-string">&#x27;because&#x27;</span>, <span class="hljs-string">&#x27;as&#x27;</span>, <span class="hljs-string">&#x27;until&#x27;</span>,
+<span class="hljs-string">&#x27;while&#x27;</span>, <span class="hljs-string">&#x27;of&#x27;</span>, <span class="hljs-string">&#x27;at&#x27;</span>, <span class="hljs-string">&#x27;by&#x27;</span>, <span class="hljs-string">&#x27;for&#x27;</span>, <span class="hljs-string">&#x27;with&#x27;</span>, <span class="hljs-string">&#x27;about&#x27;</span>, <span class="hljs-string">&#x27;against&#x27;</span>, <span class="hljs-string">&#x27;between&#x27;</span>, <span class="hljs-string">&#x27;into&#x27;</span>,
+<span class="hljs-string">&#x27;through&#x27;</span>, <span class="hljs-string">&#x27;during&#x27;</span>, <span class="hljs-string">&#x27;before&#x27;</span>, <span class="hljs-string">&#x27;after&#x27;</span>, <span class="hljs-string">&#x27;above&#x27;</span>, <span class="hljs-string">&#x27;below&#x27;</span>, <span class="hljs-string">&#x27;to&#x27;</span>, <span class="hljs-string">&#x27;from&#x27;</span>, <span class="hljs-string">&#x27;up&#x27;</span>, <span class="hljs-string">&#x27;down&#x27;</span>,
+<span class="hljs-string">&#x27;in&#x27;</span>, <span class="hljs-string">&#x27;out&#x27;</span>, <span class="hljs-string">&#x27;on&#x27;</span>, <span class="hljs-string">&#x27;off&#x27;</span>, <span class="hljs-string">&#x27;over&#x27;</span>, <span class="hljs-string">&#x27;under&#x27;</span>, <span class="hljs-string">&#x27;again&#x27;</span>, <span class="hljs-string">&#x27;further&#x27;</span>, <span class="hljs-string">&#x27;then&#x27;</span>, <span class="hljs-string">&#x27;once&#x27;</span>, <span class="hljs-string">&#x27;here&#x27;</span>,
+<span class="hljs-string">&#x27;there&#x27;</span>, <span class="hljs-string">&#x27;when&#x27;</span>, <span class="hljs-string">&#x27;where&#x27;</span>, <span class="hljs-string">&#x27;why&#x27;</span>, <span class="hljs-string">&#x27;how&#x27;</span>, <span class="hljs-string">&#x27;all&#x27;</span>, <span class="hljs-string">&#x27;any&#x27;</span>, <span class="hljs-string">&#x27;both&#x27;</span>, <span class="hljs-string">&#x27;each&#x27;</span>, <span class="hljs-string">&#x27;few&#x27;</span>, <span class="hljs-string">&#x27;more&#x27;</span>,
+<span class="hljs-string">&#x27;most&#x27;</span>, <span class="hljs-string">&#x27;other&#x27;</span>, <span class="hljs-string">&#x27;some&#x27;</span>, <span class="hljs-string">&#x27;such&#x27;</span>, <span class="hljs-string">&#x27;no&#x27;</span>, <span class="hljs-string">&#x27;nor&#x27;</span>, <span class="hljs-string">&#x27;not&#x27;</span>, <span class="hljs-string">&#x27;only&#x27;</span>, <span class="hljs-string">&#x27;own&#x27;</span>, <span class="hljs-string">&#x27;same&#x27;</span>, <span class="hljs-string">&#x27;so&#x27;</span>,
+<span class="hljs-string">&#x27;than&#x27;</span>, <span class="hljs-string">&#x27;too&#x27;</span>, <span class="hljs-string">&#x27;very&#x27;</span>, <span class="hljs-string">&#x27;s&#x27;</span>, <span class="hljs-string">&#x27;t&#x27;</span>, <span class="hljs-string">&#x27;can&#x27;</span>, <span class="hljs-string">&#x27;will&#x27;</span>, <span class="hljs-string">&#x27;just&#x27;</span>, <span class="hljs-string">&#x27;don&#x27;</span>, <span class="hljs-string">&#x27;should&#x27;</span>, <span class="hljs-string">&#x27;now&#x27;</span>]
+</div></code></pre>
+<p>and I used this list comprehions command to check if a token is included in the list to remove it:</p>
+<pre><code class="language-python"><div>[token <span class="hljs-keyword">for</span> token <span class="hljs-keyword">in</span> tokens_list <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> token <span class="hljs-keyword">in</span> stop_words]
+</div></code></pre>
+</li>
 </ul>
 <h2 id="step-3--classification">Step 3 : Classification</h2>
+<p>To classify the news articles I used the normalized data produced in the previous step to implement a Naive Bayes classifier from scratch.</p>
+<p>A Naive Bayes classifier is a supervised learning algorithm which is based on Bayes Theorem. It's a probabilistic classifier because choses the class of an input based of a probability of its features.</p>
+<p>Bayes Theorem formula: <img src="https://miro.medium.com/max/1020/1*tjcmj9cDQ-rHXAtxCu5bRQ.png" alt="Bayes Theorem formula"></p>
+<p>Where:</p>
+<ul>
+<li>P(A|B) is Posterior probability</li>
+<li>P(B|A) is Likelihood probability</li>
+<li>P(A) is Prior Probability:</li>
+<li>P(B) is Marginal Probability</li>
+</ul>
+<h3 id="getting-the-training-sets">Getting the training sets</h3>
+<p>To use the formula for the text classification problem we need to calculate the probabilities that each word has in covid and non covid articles. To do so two training sets are needed for the training, the TRUE training set and the FALSE one, that rappresent respectively the set of articles that are covid related and the one that is not.</p>
+<p>To get the training set I wrote a script <code>getTrainingSets.py</code> where i divide the normalized articles data in the TRUE and FALSE set.</p>
+<p>In the FALSE set I used the articles written before 2020 because covid was still undected and for the TRUE set I used the articles that contain in the title or in the description the keywords <em>covid-19</em> or <em>coronavirus</em>.</p>
+<p>The training sets have been saved respectively in <code>./data/training_covid</code> and <code>./data/training_NOT_covid</code></p>
+<h3 id="getting-the-words-probabilities">Getting the words probabilities</h3>
+<p>Having the FALSE and TRUE training sets I can loop on them to calculate the frequencies of the words occurencies and from them calculate the probability for each word using <code>frequency.py</code></p>
+<p>I'm using a Python default_dict data structure to ease the process of creating the dictionary to save the words frequencies and probabilities.</p>
+<p>I chose to treat in the same way the words found in the title and the ones found in the description.</p>
+<p>Having the words frequency I calculate the probability of each word for the both sets (diving the frequency of the word by the sum of all the occurences):</p>
+<pre><code class="language-python"><div><span class="hljs-keyword">for</span> word <span class="hljs-keyword">in</span> tqdm(isCovidFreq):
+    isCovidProb[word] = isCovidFreq[word] / isCovidWordsLength
+</div></code></pre>
+<p>in this way I get the most commond words in covid news and non covid saved in <code>./data/prob_covid.json</code> and <code>./data/prob_NOT_covid.json</code>.</p>
+<p>The most 20 common words for covid news:</p>
+<pre><code class="language-json"><div><span class="hljs-string">&quot;coronavirus&quot;</span>: <span class="hljs-number">0.043835909923861924</span>,
+<span class="hljs-string">&quot;covid-19&quot;</span>: <span class="hljs-number">0.015808012474694544</span>,
+<span class="hljs-string">&quot;news&quot;</span>: <span class="hljs-number">0.010715819839904057</span>,
+<span class="hljs-string">&quot;ha&quot;</span>: <span class="hljs-number">0.009922155787593942</span>,
+<span class="hljs-string">&quot;new&quot;</span>: <span class="hljs-number">0.008365884681941676</span>,
+<span class="hljs-string">&quot;pandemic&quot;</span>: <span class="hljs-number">0.008240723643182362</span>,
+<span class="hljs-string">&quot;case&quot;</span>: <span class="hljs-number">0.006377259274490732</span>,
+<span class="hljs-string">&quot;time&quot;</span>: <span class="hljs-number">0.005009907138240168</span>,
+<span class="hljs-string">&quot;say&quot;</span>: <span class="hljs-number">0.004845602728821659</span>,
+<span class="hljs-string">&quot;trump&quot;</span>: <span class="hljs-number">0.004683742003155996</span>,
+<span class="hljs-string">&quot;people&quot;</span>: <span class="hljs-number">0.004504464476924605</span>,
+<span class="hljs-string">&quot;lockdown&quot;</span>: <span class="hljs-number">0.004464077049082143</span>,
+<span class="hljs-string">&quot;health&quot;</span>: <span class="hljs-number">0.004126004509529567</span>,
+<span class="hljs-string">&quot;outbreak&quot;</span>: <span class="hljs-number">0.0041117867131493825</span>,
+<span class="hljs-string">&quot;wa&quot;</span>: <span class="hljs-number">0.0039550355080578475</span>,
+<span class="hljs-string">&quot;death&quot;</span>: <span class="hljs-number">0.0037163542513254984</span>,
+<span class="hljs-string">&quot;said&quot;</span>: <span class="hljs-number">0.003695160848596286</span>,
+<span class="hljs-string">&quot;world&quot;</span>: <span class="hljs-number">0.0035532938990902566</span>,
+<span class="hljs-string">&quot;state&quot;</span>: <span class="hljs-number">0.0033374499777935793</span>,
+<span class="hljs-string">&quot;online&quot;</span>: <span class="hljs-number">0.003325098267188294</span>,
+</div></code></pre>
+<p>The most 20 common words for NON covid news:</p>
+<pre><code class="language-json"><div><span class="hljs-string">&quot;news&quot;</span>: <span class="hljs-number">0.010683131939110142</span>,
+<span class="hljs-string">&quot;ha&quot;</span>: <span class="hljs-number">0.008041611622448533</span>,
+<span class="hljs-string">&quot;wa&quot;</span>: <span class="hljs-number">0.006844409412116912</span>,
+<span class="hljs-string">&quot;new&quot;</span>: <span class="hljs-number">0.006049156914812433</span>,
+<span class="hljs-string">&quot;time&quot;</span>: <span class="hljs-number">0.005171104253908384</span>,
+<span class="hljs-string">&quot;online&quot;</span>: <span class="hljs-number">0.005122369938670393</span>,
+<span class="hljs-string">&quot;trump&quot;</span>: <span class="hljs-number">0.004485226975135559</span>,
+<span class="hljs-string">&quot;daily&quot;</span>: <span class="hljs-number">0.003886308735628415</span>,
+<span class="hljs-string">&quot;say&quot;</span>: <span class="hljs-number">0.0037605308472398883</span>,
+<span class="hljs-string">&quot;year&quot;</span>: <span class="hljs-number">0.0036743987658769293</span>,
+<span class="hljs-string">&quot;mail&quot;</span>: <span class="hljs-number">0.0034204825461542467</span>,
+<span class="hljs-string">&quot;star&quot;</span>: <span class="hljs-number">0.0031140344278150615</span>,
+<span class="hljs-string">&quot;one&quot;</span>: <span class="hljs-number">0.002730815712720413</span>,
+<span class="hljs-string">&quot;said&quot;</span>: <span class="hljs-number">0.0027005474477373444</span>,
+<span class="hljs-string">&quot;world&quot;</span>: <span class="hljs-number">0.002651965678131895</span>,
+<span class="hljs-string">&quot;video&quot;</span>: <span class="hljs-number">0.0026342061550171606</span>,
+<span class="hljs-string">&quot;president&quot;</span>: <span class="hljs-number">0.0026308260649487596</span>,
+<span class="hljs-string">&quot;first&quot;</span>: <span class="hljs-number">0.002223248220952618</span>,
+<span class="hljs-string">&quot;day&quot;</span>: <span class="hljs-number">0.002182060900166639</span>,
+<span class="hljs-string">&quot;woman&quot;</span>: <span class="hljs-number">0.002161523440796165</span>,
+</div></code></pre>
+<h3 id="classification">Classification</h3>
+<p>Now that we have the tokens probabilities for the TRUE and the FALSE sets we can use them to calculate the probability of each token set being part of one of the two sets by multiplying the probabilities for each token and multiplying by prior probability and see which classification gives us a higher score. The script that handles this is <code>classifier.py</code>.</p>
+<p>Doing like this I found 2 problems:</p>
+<ul>
+<li>Tokens that are in a set and not in the other crash the script because the value is not found in the dictionary. To solve this problem for tokens that don't have a probability value I use the lowest probability for that tokens set.</li>
+<li>Using the multiplications of probabilities we can incurr in numerical underflow: being the values very small and multuplyng them by each other with large inputs the result is a very small number and it can get unstable. To fix this I used the sum of the logs of the probabilities instead of the multiplication of them. This fixes the small number problem and gives more reasonable classification scores.<pre><code class="language-r"><div>P(yi | x1, x2, …, xn) = <span class="hljs-built_in">log</span>(P(x1|y1)) + <span class="hljs-built_in">log</span>(P(x2|y1)) + … <span class="hljs-built_in">log</span>(P(xn|y1))+ <span class="hljs-built_in">log</span>(P(yi))
+</div></code></pre>
+</li>
+</ul>
+<p>To get the prior probabilities I used the provided flag <em>is_covid</em>.</p>
+<p>The result of the classification is stored in <code>./data/classification_results</code> for each outlet in json format. The class is of every news is found in the field <em>class</em> and can be <em>IS COVID</em> or <em>NOT COVID</em>. Is also possible to see the calculated score for each news for both classes.</p>
 <h2 id="step-4--classification-accuracy-verification">Step 4 : Classification Accuracy Verification</h2>
 <h2 id="step-5--analysis">Step 5 : Analysis</h2>
 <h1 id="conclusions">Conclusions</h1>
